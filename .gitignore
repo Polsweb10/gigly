@@ -1,0 +1,23 @@
+# Python & Environments
+venv/
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Local Database
+gigly.db
+gigly.db-journal
+
+# Uploads cache (keep placeholder directories)
+uploads/deliveries/*
+uploads/watermarked/*
+!uploads/deliveries/.gitkeep
+!uploads/watermarked/.gitkeep
+!uploads/gigs/.gitkeep
+
+# IDE & OS
+.DS_Store
+Thumbs.db
+*.log

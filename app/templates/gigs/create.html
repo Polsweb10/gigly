@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+
+{% block title %}Publicar Nuevo Servicio (Gig) • Gigly{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    
+    <div class="mb-8">
+        <h1 class="text-3xl font-extrabold text-[#EAECEF]">Publicar Servicio en Gigly</h1>
+        <p class="text-xs text-[#B0B5BD] mt-1">Configura tus 3 paquetes de precios y activa las protecciones avanzadas de Gigly.</p>
+    </div>
+
+    {% if error %}
+        <div class="bg-red-500/10 border border-red-500/30 text-red-400 text-xs p-3 rounded-lg mb-6 flex items-center gap-2">
+            <i class="fa-solid fa-circle-exclamation text-sm"></i>
+            <span>{{ error }}</span>
+        </div>
+    {% endif %}
+
+    <form action="/gigs/new" method="POST" enctype="multipart/form-data" class="space-y-8" x-data="{ hasRetainer: false }">
+        
+        <!-- Section 1: Overview -->
+        <div class="gigly-card p-6 space-y-4">
+            <h2 class="text-sm font-bold text-teal-400 uppercase tracking-wider flex items-center gap-2">
+                <span class="w-5 h-5 rounded-full bg-teal-500/20 text-teal-400 flex items-center justify-center text-xs">1</span>
+                <span>Información General del Servicio</span>
+            </h2>
+
+            <div>
+                <label class="block text-xs font-bold text-[#B0B5BD] uppercase tracking-wider mb-1.5">Título del Gig</label>
+                <input 
+                    type="text" 
+                    name="title" 
+                    required 
+                    placeholder="Ej. Desarrollaré tu aplicación web completa con FastAPI, SQLAlchemy y Tailwind CSS"
+                    class="w-full bg-[#121417] text-sm text-[#EAECEF] placeholder-[#555B66] px-4 py-2.5 rounded-lg border border-[#262B35] focus:outline-none focus:border-teal-400 transition"
+                >
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-[#B0B5BD] uppercase tracking-wider mb-1.5">Categoría</label>
+                    <select name="category" required class="w-full bg-[#121417] text-xs text-[#EAECEF] p-2.5 rounded-lg border border-[#262B35] focus:border-teal-400">
+                        {% for cat in categories %}
+                            <option value="{{ cat }}">{{ cat }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-[#B0B5BD] uppercase tracking-wider mb-1.5">Etiquetas Clave (separadas por coma)</label>
+                    <input 
+                        type="text" 
+                        name="tags" 
+                        placeholder="Python, FastAPI, Backend, API"
+                        class="w-full bg-[#121417] text-sm text-[#EAECEF] placeholder-[#555B66] px-4 py-2 rounded-lg border border-[#262B35] focus:border-teal-400"
+                    >
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-[#B0B5BD] uppercase tracking-wider mb-1.5">Descripción Detallada</label>
+                <textarea 
+                    name="description" 
+                    rows="5" 
+                    required 
+                    placeholder="Describe exactamente qué ofreces, tu metodología de trabajo y tecnologías que utilizas..."
+                    class="w-full bg-[#121417] text-sm text-[#EAECEF] placeholder-[#555B66] p-4 rounded-lg border border-[#262B35] focus:outline-none focus:border-teal-400 transition"
+                ></textarea>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-[#B0B5BD] uppercase tracking-wider mb-1.5">Subir Imagen de Portada</label>
+                    <input type="file" name="image_file" accept="image/*" class="w-full bg-[#121417] text-xs text-[#B0B5BD] p-2 rounded-lg border border-[#262B35]">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-[#B0B5BD] uppercase tracking-wider mb-1.5">O pegar URL de Imagen</label>
+                    <input 
+                        type="url" 
+                        name="image_url" 
+                        placeholder="https://images.unsplash.com/photo-..."
+                        class="w-full bg-[#121417] text-sm text-[#EAECEF] placeholder-[#555B66] px-4 py-2 rounded-lg border border-[#262B35]"
+                    >
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Gigly Advantage Extras -->
+        <div class="gigly-card p-6 space-y-4">
+            <h2 class="text-sm font-bold text-teal-400 uppercase tracking-wider flex items-center gap-2">
+                <span class="w-5 h-5 rounded-full bg-teal-500/20 text-teal-400 flex items-center justify-center text-xs">2</span>
+                <span>Ventajas Exclusivas Gigly</span>
+            </h2>
+
+            <div class="space-y-4">
+                <label class="flex items-start gap-3 p-3 rounded-lg bg-[#121417] border border-[#262B35] cursor-pointer hover:border-purple-500/50 transition">
+                    <input type="checkbox" name="requires_nda" value="true" class="mt-1 accent-purple-500">
+                    <div>
+                        <span class="text-xs font-bold text-[#EAECEF] flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-contract text-purple-400"></i> Exigir Contrato de Confidencialidad (NDA) Digital
+                        </span>
+                        <p class="text-[11px] text-[#B0B5BD] mt-0.5">El cliente deberá firmar digitalmente el NDA antes de acceder a la sala privada y archivos sensibles.</p>
+                    </div>
+                </label>
+
+                <div class="p-3 rounded-lg bg-[#121417] border border-[#262B35] space-y-3">
+                    <label class="flex items-start gap-3 cursor-pointer">
+                        <input type="checkbox" name="allows_retainer" value="true" x-model="hasRetainer" class="mt-1 accent-amber-500">
+                        <div>
+                            <span class="text-xs font-bold text-[#EAECEF] flex items-center gap-1.5">
+                                <i class="fa-solid fa-repeat text-amber-400"></i> Ofrecer Suscripción Mensual Recurrente (Retainer)
+                            </span>
+                            <p class="text-[11px] text-[#B0B5BD] mt-0.5">Permite a los clientes contratarte con una tarifa mensual automática para soporte o mantenimiento continuo.</p>
+                        </div>
+                    </label>
+
+                    <div x-show="hasRetainer" class="pt-2 pl-7" style="display: none;">
+                        <label class="block text-[11px] font-bold text-[#B0B5BD] uppercase mb-1">Precio Mensual de la Suscripción ($ USD)</label>
+                        <input type="number" step="0.01" name="retainer_monthly_price" placeholder="Ej. 299.00" class="w-48 bg-[#1A1D24] text-xs text-[#EAECEF] p-2 rounded-lg border border-[#262B35] focus:border-amber-400">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: 3-Tier Packages Setup -->
+        <div class="gigly-card p-6 space-y-6">
+            <h2 class="text-sm font-bold text-teal-400 uppercase tracking-wider flex items-center gap-2">
+                <span class="w-5 h-5 rounded-full bg-teal-500/20 text-teal-400 flex items-center justify-center text-xs">3</span>
+                <span>Configuración de los 3 Niveles de Paquetes</span>
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                <!-- Basic -->
+                <div class="bg-[#121417] p-4 rounded-xl border border-[#262B35] space-y-3">
+                    <div class="flex items-center justify-between pb-2 border-b border-[#262B35]">
+                        <span class="text-xs font-bold text-teal-400 uppercase">Paquete Básico</span>
+                        <span class="text-[10px] bg-teal-500/10 text-teal-300 px-2 py-0.5 rounded font-bold">Tier 1</span>
+                    </div>
+                    <input type="text" name="basic_name" value="Plan Inicial Básico" placeholder="Nombre" class="w-full bg-[#1A1D24] text-xs text-[#EAECEF] p-2 rounded border border-[#262B35]">
+                    <textarea name="basic_desc" rows="2" placeholder="Qué entregas en este plan..." required class="w-full bg-[#1A1D24] text-xs text-[#EAECEF] p-2 rounded border border-[#262B35]">Funcionalidad esencial básica con código limpio y entrega puntual.</textarea>
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-[10px] text-[#B0B5BD] block">Días Entrega</label>
+                            <input type="number" name="basic_days" value="3" class="w-full bg-[#1A1D24] text-xs text-[#EAECEF] p-1.5 rounded border border-[#262B35]">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-[#B0B5BD] block">Revisiones</label>
+                            <input type="number" name="basic_revisions" value="1" class="w-full bg-[#1A1D24] text-xs text-[#EAECEF] p-1.5 rounded border border-[#262B35]">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] text-[#B0B5BD] block">Precio ($ USD)</label>
+                        <input type="number" name="basic_price" value="50" required class="w-full bg-[#1A1D24] text-xs text-teal-400 font-bold p-2 rounded border border-[#262B35]">
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] text-[#B0B5BD] block">Características (1 por línea)</label>
+                        <textarea name="basic_features" rows="3" class="w-full bg-[#1A1D24] text-xs text-[#EAECEF] p-2 rounded border border-[#262B35]">Estructura base del proyecto
+Código documentado
+Entrega en 3 días</textarea>
+                    </div>
+                </div>
+
+                <!-- Standard -->
+                <div class="bg-[#121417] p-4 rounded-xl border border-teal-500/30 space-y-3 relative">
+                    <div class="flex items-center justify-between pb-2 border-b border-[#262B35]">
+                        <span class="text-xs font-bold text-teal-400 uppercase">Paquete Estándar</span>
+                        <span class="text-[10px] bg-teal-500 text-black px-2 py-0.5 rounded font-bold">Más Popular</span>
+                    </div>
+                    <input type="text" name="standard_name" value="Plan Estándar Completo" placeholder="Nombre" class="w-full bg-[#1A1D24] text-xs text-[#EAECEF] p-2 rounded border border-[#262B35]">
+                    <textarea name="standard_desc" rows="2" placeholder="Qué entregas..." required class="w-full bg-[#1A1D24] text-xs text-[#EAECEF] p-2 rounded border border-[#262B35]">Solución intermedia completa con base de datos, APIs y diseño responsivo.</textarea>
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-[10px] text-[#B0B5BD] block">Días Entrega</label>
+                            <input type="number" name="standard_days" value="5" class="w-full bg-[#1A1D24] text-xs text-[#EAECEF] p-1.5 rounded border border-[#262B35]">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-[#B0B5BD] block">Revisiones</label>
+                            <input type="number" name="standard_revisions" value="3" class="w-full bg-[#1A1D24] text-xs text-[#EAECEF] p-1.5 rounded border border-[#262B35]">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] text-[#B0B5BD] block">Precio ($ USD)</label>
+                        <input type="number" name="standard_price" value="120" required class="w-full bg-[#1A1D24] text-xs text-teal-400 font-bold p-2 rounded border border-[#262B35]">
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] text-[#B0B5BD] block">Características (1 por línea)</label>
+                        <textarea name="standard_features" rows="3" class="w-full bg-[#1A1D24] text-xs text-[#EAECEF] p-2 rounded border border-[#262B35]">Todo lo de Básico
+Base de datos integrada
+Soporte para pagos por hitos</textarea>
+                    </div>
+                </div>
+
+                <!-- Premium -->
+                <div class="bg-[#121417] p-4 rounded-xl border border-[#262B35] space-y-3">
+                    <div class="flex items-center justify-between pb-2 border-b border-[#262B35]">
+                        <span class="text-xs font-bold text-amber-400 uppercase">Plan Premium Pro</span>
+                        <span class="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded font-bold">Tier 3</span>
+                    </div>
+                    <input type="text" name="premium_name" value="Solución Empresarial Pro" placeholder="Nombre" class="w-full bg-[#1A1D24] text-xs text-[#EAECEF] p-2 rounded border border-[#262B35]">
+                    <textarea name="premium_desc" rows="2" placeholder="Qué entregas..." required class="w-full bg-[#1A1D24] text-xs text-[#EAECEF] p-2 rounded border border-[#262B35]">Arquitectura de nivel de producción, pruebas, optimización y despliegue en la nube.</textarea>
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-[10px] text-[#B0B5BD] block">Días Entrega</label>
+                            <input type="number" name="premium_days" value="7" class="w-full bg-[#1A1D24] text-xs text-[#EAECEF] p-1.5 rounded border border-[#262B35]">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-[#B0B5BD] block">Revisiones</label>
+                            <input type="number" name="premium_revisions" value="-1" class="w-full bg-[#1A1D24] text-xs text-[#EAECEF] p-1.5 rounded border border-[#262B35]">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] text-[#B0B5BD] block">Precio ($ USD)</label>
+                        <input type="number" name="premium_price" value="250" required class="w-full bg-[#1A1D24] text-xs text-amber-400 font-bold p-2 rounded border border-[#262B35]">
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] text-[#B0B5BD] block">Características (1 por línea)</label>
+                        <textarea name="premium_features" rows="3" class="w-full bg-[#1A1D24] text-xs text-[#EAECEF] p-2 rounded border border-[#262B35]">Todo lo de Estándar
+Revisiones ilimitadas
+Despliegue y configuración Render
+Soporte prioritario 24/7</textarea>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="flex items-center justify-end gap-4">
+            <a href="/gigs" class="px-6 py-3 bg-[#1A1D24] hover:bg-[#232731] text-xs font-bold text-[#EAECEF] rounded-lg transition">Cancelar</a>
+            <button 
+                type="submit" 
+                class="px-8 py-3 bg-teal-500 hover:bg-teal-600 text-black font-extrabold text-sm rounded-lg transition shadow-lg shadow-teal-500/20 flex items-center gap-2"
+            >
+                <i class="fa-solid fa-check"></i>
+                <span>Publicar Gig en Gigly</span>
+            </button>
+        </div>
+
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout Seguro con Gigly Escrow • Gigly{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10" x-data="{
+    useMilestones: false,
+    milestones: [
+        { title: 'Fase 1: Diseño y Prototipo Base', percent: 30, amount: ({{ fees.base_amount }} * 0.30).toFixed(2), due_days: 2 },
+        { title: 'Fase 2: Desarrollo y Lógica Principal', percent: 40, amount: ({{ fees.base_amount }} * 0.40).toFixed(2), due_days: 3 },
+        { title: 'Fase 3: Pruebas, Ajustes y Entrega Final', percent: 30, amount: ({{ fees.base_amount }} * 0.30).toFixed(2), due_days: 2 }
+    ],
+    async submitOrder() {
+        const formData = new FormData();
+        formData.append('gig_id', '{{ gig.id }}');
+        formData.append('package_id', '{{ package.id }}');
+        formData.append('is_milestones', this.useMilestones);
+        if (this.useMilestones) {
+            formData.append('milestones_json', JSON.stringify(this.milestones));
+        }
+
+        try {
+            const res = await fetch('/api/orders/create', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            if (data.success && data.redirect_url) {
+                window.location.href = data.redirect_url;
+            } else {
+                alert(data.error || 'Error al procesar el pedido.');
+            }
+        } catch (e) {
+            console.error('Error al iniciar pedido:', e);
+            alert('Error de conexión.');
+        }
+    }
+}">
+
+    <!-- Breadcrumb -->
+    <div class="flex items-center gap-2 text-xs text-[#B0B5BD] mb-4">
+        <a href="/gigs/{{ gig.slug }}" class="hover:text-teal-400">&larr; Volver al servicio</a>
+        <span>/</span>
+        <span class="text-[#EAECEF]">Confirmación de Pedido y Custodia</span>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        <!-- Left: Order Options, Milestones Selector, NDA notice (2 cols) -->
+        <div class="md:col-span-2 space-y-6">
+            
+            <!-- Service Summary Card -->
+            <div class="gigly-card p-6 flex items-start gap-4">
+                <img src="{{ gig.image_url }}" alt="{{ gig.title }}" class="w-24 h-24 rounded-lg object-cover border border-[#262B35] shrink-0">
+                <div class="space-y-1">
+                    <span class="text-[10px] bg-teal-500/10 text-teal-400 px-2 py-0.5 rounded font-bold uppercase">{{ package.name }} ({{ package.tier }})</span>
+                    <h2 class="text-base font-bold text-[#EAECEF] leading-snug">{{ gig.title }}</h2>
+                    <p class="text-xs text-[#B0B5BD]">Vendedor: <strong class="text-[#EAECEF]">{{ gig.seller.full_name }}</strong></p>
+                    <div class="text-xs text-[#B0B5BD] flex items-center gap-3 pt-1">
+                        <span><i class="fa-regular fa-clock text-teal-400"></i> {{ package.delivery_days }} días</span>
+                        <span><i class="fa-solid fa-arrows-rotate text-teal-400"></i> {% if package.revisions == -1 %}Ilimitadas{% else %}{{ package.revisions }} revisiones{% endif %}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Milestone Payment Selector (Gigly Innovation) -->
+            <div class="gigly-card p-6 space-y-4">
+                <div class="flex items-center justify-between border-b border-[#262B35] pb-3">
+                    <div>
+                        <h3 class="text-sm font-bold text-[#EAECEF] flex items-center gap-2">
+                            <i class="fa-solid fa-layer-group text-teal-400"></i> Modalidad de Liberación de Pagos
+                        </h3>
+                        <p class="text-xs text-[#B0B5BD]">Elige cómo deseas que Gigly libere los fondos retenidos al vendedor</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <!-- Option 1: Standard Escrow -->
+                    <div 
+                        @click="useMilestones = false" 
+                        :class="!useMilestones ? 'border-teal-400 bg-teal-500/5' : 'border-[#262B35] bg-[#121417]'"
+                        class="p-4 rounded-xl border cursor-pointer transition space-y-2"
+                    >
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-[#EAECEF]">Pago Único Completo</span>
+                            <i class="fa-solid" :class="!useMilestones ? 'fa-circle-dot text-teal-400' : 'fa-circle text-[#B0B5BD]'"></i>
+                        </div>
+                        <p class="text-[11px] text-[#B0B5BD]">El 100% del pago queda en custodia y se libera al finalizar todo el proyecto.</p>
+                    </div>
+
+                    <!-- Option 2: Milestone Escrow -->
+                    <div 
+                        @click="useMilestones = true" 
+                        :class="useMilestones ? 'border-teal-400 bg-teal-500/5' : 'border-[#262B35] bg-[#121417]'"
+                        class="p-4 rounded-xl border cursor-pointer transition space-y-2"
+                    >
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-[#EAECEF] flex items-center gap-1.5">
+                                <span>Pagos por Hitos</span>
+                                <span class="text-[9px] bg-teal-500/20 text-teal-300 px-1 rounded">Gigly Extra</span>
+                            </span>
+                            <i class="fa-solid" :class="useMilestones ? 'fa-circle-dot text-teal-400' : 'fa-circle text-[#B0B5BD]'"></i>
+                        </div>
+                        <p class="text-[11px] text-[#B0B5BD]">Divide en fases. Apruebas entregables parciales y liberas montos paso a paso.</p>
+                    </div>
+                </div>
+
+                <!-- Milestones Breakdown Preview -->
+                <div x-show="useMilestones" x-transition class="mt-4 p-4 rounded-xl bg-[#121417] border border-[#262B35] space-y-3">
+                    <p class="text-xs font-bold text-teal-400 uppercase tracking-wider">Desglose de Hitos Configurado:</p>
+                    <template x-for="(m, idx) in milestones" :key="idx">
+                        <div class="flex items-center justify-between text-xs py-1.5 border-b border-[#262B35] last:border-0">
+                            <div>
+                                <span class="font-bold text-[#EAECEF]" x-text="m.title"></span>
+                                <span class="text-[10px] text-[#B0B5BD] block" x-text="m.due_days + ' días estimados'"></span>
+                            </div>
+                            <span class="font-extrabold text-teal-400" x-text="'$' + m.amount + ' USD'"></span>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- NDA Notice if gig requires NDA -->
+            {% if gig.requires_nda %}
+                <div class="gigly-card p-4 border border-purple-500/40 bg-purple-950/10 flex items-start gap-3">
+                    <i class="fa-solid fa-file-contract text-purple-400 text-lg mt-0.5"></i>
+                    <div>
+                        <h4 class="text-xs font-bold text-purple-300">Este servicio requiere Contrato de Confidencialidad (NDA)</h4>
+                        <p class="text-[11px] text-[#B0B5BD] mt-0.5">
+                            Al iniciar el pedido, se activará un módulo de firma digital con 1 clic para formalizar el acuerdo legal antes del intercambio de información sensible.
+                        </p>
+                    </div>
+                </div>
+            {% endif %}
+
+        </div>
+
+        <!-- Right: Price Breakdown & Payment Action (1 col) -->
+        <div class="md:col-span-1">
+            <div class="gigly-card p-6 border border-[#262B35] sticky top-24 space-y-6">
+                
+                <h3 class="text-sm font-bold text-[#EAECEF] uppercase tracking-wider border-b border-[#262B35] pb-2">
+                    Resumen Financiero
+                </h3>
+
+                <div class="space-y-3 text-xs">
+                    <div class="flex items-center justify-between text-[#B0B5BD]">
+                        <span>Precio del Servicio:</span>
+                        <span class="text-[#EAECEF] font-bold">${{ "%.2f"|format(fees.base_amount) }}</span>
+                    </div>
+
+                    <div class="flex items-center justify-between text-[#B0B5BD]">
+                        <span class="flex items-center gap-1">
+                            <span>Tarifa de Servicio Gigly ({{ platform_buyer_fee }}%):</span>
+                            <i class="fa-solid fa-circle-info text-[10px] text-teal-400" title="Cubre la infraestructura, mediación de disputas y custodia bancaria"></i>
+                        </span>
+                        <span class="text-[#EAECEF] font-bold">${{ "%.2f"|format(fees.buyer_fee) }}</span>
+                    </div>
+
+                    <div class="border-t border-[#262B35] pt-3 flex items-center justify-between text-sm">
+                        <span class="font-bold text-[#EAECEF]">Total en Custodia:</span>
+                        <span class="text-xl font-black text-teal-400">${{ "%.2f"|format(fees.total_buyer_paid) }}</span>
+                    </div>
+                </div>
+
+                <!-- Wallet Status Indicator -->
+                <div class="p-3 rounded-lg bg-[#121417] border border-[#262B35] text-xs space-y-1">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[#B0B5BD]">Tu Saldo Disponible:</span>
+                        <span class="font-bold text-teal-300">${{ "%.2f"|format(user.wallet_balance) }}</span>
+                    </div>
+                    {% if user.wallet_balance >= fees.total_buyer_paid %}
+                        <p class="text-[10px] text-teal-400 flex items-center gap-1">
+                            <i class="fa-solid fa-circle-check"></i> Saldo suficiente para cubrir la custodia
+                        </p>
+                    {% else %}
+                        <p class="text-[10px] text-amber-400 flex items-center gap-1">
+                            <i class="fa-solid fa-bolt"></i> Saldo insuficiente: Gigly recargará automáticamente el monto demo al confirmar.
+                        </p>
+                    {% endif %}
+                </div>
+
+                <!-- Confirmation Button -->
+                <button 
+                    type="button" 
+                    @click="submitOrder()"
+                    class="w-full py-3.5 bg-teal-500 hover:bg-teal-600 text-black font-extrabold text-sm rounded-xl transition shadow-lg shadow-teal-500/25 flex items-center justify-center gap-2"
+                >
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Bloquear Fondos en Custodia</span>
+                </button>
+
+                <!-- Escrow Guarantee Badge -->
+                <div class="text-[10px] text-[#B0B5BD] text-center space-y-1 leading-tight">
+                    <p class="text-teal-400 font-bold">🔒 Garantía Gigly Escrow Activa</p>
+                    <p>El vendedor no recibirá el dinero hasta que tú apruebes los entregables finales.</p>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

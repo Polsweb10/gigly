@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+{% block title %}Panel de Control de Administración • Gigly Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="{
+    tab: 'disputes',
+    async resolveOrder(orderId, action) {
+        const actionLabel = (action === 'release_seller') ? 'liberar los fondos al vendedor' : 'reembolsar el 100% al comprador';
+        if (!confirm('¿Confirmas como Administrador que deseas ' + actionLabel + '?')) return;
+        
+        const formData = new FormData();
+        formData.append('action', action);
+        const res = await fetch('/admin/api/orders/' + orderId + '/resolve', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (data.success) {
+            Gigly.showToast(data.message);
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            alert(data.error || 'Error al resolver');
+        }
+    },
+    async toggleGig(gigId) {
+        const res = await fetch('/admin/api/gigs/' + gigId + '/toggle', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+            Gigly.showToast('Estado del Gig actualizado.');
+            setTimeout(() => window.location.reload(), 800);
+        }
+    },
+    async toggleVerify(userId) {
+        const res = await fetch('/admin/api/users/' + userId + '/verify', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+            Gigly.showToast('Estado de verificación actualizado.');
+            setTimeout(() => window.location.reload(), 800);
+        }
+    }
+}">
+
+    <!-- Top Admin Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+            <div class="flex items-center gap-2 text-xs text-[#B0B5BD] mb-1">
+                <a href="/" class="hover:text-teal-400">Inicio</a>
+                <span>/</span>
+                <span class="text-[#EAECEF]">Panel de Control</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <h1 class="text-3xl font-extrabold text-[#EAECEF]">Panel de Administración Gigly</h1>
+                <span class="bg-red-500/20 text-red-400 border border-red-500/40 text-xs font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                    SuperAdmin
+                </span>
+            </div>
+            <p class="text-xs text-[#B0B5BD] mt-1">Supervisión ejecutiva, arbitraje de custodia Gigly Escrow y moderación global</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <span class="text-xs text-[#B0B5BD]">Admin conectado: <strong class="text-teal-400">{{ user.full_name }}</strong></span>
+        </div>
+    </div>
+
+    <!-- Platform Global KPIs -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        
+        <!-- Total Users -->
+        <div class="gigly-card p-5 border border-[#262B35]">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold text-[#B0B5BD] uppercase tracking-wider">Comunidad Gigly</span>
+                <i class="fa-solid fa-users text-teal-400"></i>
+            </div>
+            <p class="text-3xl font-black text-[#EAECEF] mt-2">{{ total_users }}</p>
+            <span class="text-[11px] text-[#B0B5BD] mt-1 block">Freelancers y Clientes</span>
+        </div>
+
+        <!-- Total Volume GMV -->
+        <div class="gigly-card p-5 border border-[#262B35]">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold text-[#B0B5BD] uppercase tracking-wider">Volumen Transaccionado</span>
+                <i class="fa-solid fa-arrow-trend-up text-emerald-400"></i>
+            </div>
+            <p class="text-3xl font-black text-emerald-400 mt-2">${{ "%.2f"|format(gmv_volume) }}</p>
+            <span class="text-[11px] text-[#B0B5BD] mt-1 block">{{ completed_count }} pedidos finalizados</span>
+        </div>
+
+        <!-- Active Escrow Held -->
+        <div class="gigly-card p-5 border border-amber-500/30">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold text-amber-400 uppercase tracking-wider">En Custodia Escrow</span>
+                <i class="fa-solid fa-shield-halved text-amber-400"></i>
+            </div>
+            <p class="text-3xl font-black text-amber-400 mt-2">${{ "%.2f"|format(active_escrow) }}</p>
+            <span class="text-[11px] text-[#B0B5BD] mt-1 block">Fondos seguros pendientes de entrega</span>
+        </div>
+
+        <!-- Net Platform Revenue -->
+        <div class="gigly-card p-5 border border-teal-500/40">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold text-teal-400 uppercase tracking-wider">Ingresos Netos Gigly</span>
+                <i class="fa-solid fa-sack-dollar text-teal-400"></i>
+            </div>
+            <p class="text-3xl font-black text-teal-400 mt-2">${{ "%.2f"|format(platform_revenue) }}</p>
+            <span class="text-[11px] text-teal-300 mt-1 block">10% vendedor + 3% comprador</span>
+        </div>
+
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="flex items-center gap-3 border-b border-[#262B35] mb-6 text-xs font-bold">
+        <button 
+            @click="tab = 'disputes'" 
+            :class="tab === 'disputes' ? 'border-b-2 border-teal-400 text-teal-400' : 'text-[#B0B5BD] hover:text-[#EAECEF]'"
+            class="pb-3 px-3 transition flex items-center gap-1.5"
+        >
+            <i class="fa-solid fa-scale-balanced"></i>
+            <span>Centro de Arbitraje & Custodia ({{ disputed_orders|length }})</span>
+        </button>
+        <button 
+            @click="tab = 'gigs'" 
+            :class="tab === 'gigs' ? 'border-b-2 border-teal-400 text-teal-400' : 'text-[#B0B5BD] hover:text-[#EAECEF]'"
+            class="pb-3 px-3 transition flex items-center gap-1.5"
+        >
+            <i class="fa-solid fa-list-check"></i>
+            <span>Moderación de Gigs ({{ total_gigs }})</span>
+        </button>
+        <button 
+            @click="tab = 'users'" 
+            :class="tab === 'users' ? 'border-b-2 border-teal-400 text-teal-400' : 'text-[#B0B5BD] hover:text-[#EAECEF]'"
+            class="pb-3 px-3 transition flex items-center gap-1.5"
+        >
+            <i class="fa-solid fa-id-badge"></i>
+            <span>Usuarios & Verificación Oficial</span>
+        </button>
+    </div>
+
+    <!-- Tab 1: Disputes & Escrow Mediation -->
+    <div x-show="tab === 'disputes'" class="space-y-4">
+        <div class="gigly-card p-6">
+            <h3 class="text-sm font-bold text-[#EAECEF] uppercase tracking-wider mb-2 flex items-center gap-2">
+                <i class="fa-solid fa-gavel text-teal-400"></i> Pedidos en Custodia Activa / Arbitraje
+            </h3>
+            <p class="text-xs text-[#B0B5BD] mb-4">Como administrador tienes la facultad de mediar y liberar los fondos de Gigly Escrow a la parte correspondiente.</p>
+
+            {% if disputed_orders %}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead>
+                            <tr class="border-b border-[#262B35] text-[#B0B5BD] uppercase text-[10px] tracking-wider">
+                                <th class="py-3 px-2">Pedido</th>
+                                <th class="py-3 px-2">Comprador</th>
+                                <th class="py-3 px-2">Freelancer</th>
+                                <th class="py-3 px-2">En Custodia</th>
+                                <th class="py-3 px-2">Estado</th>
+                                <th class="py-3 px-2 text-right">Acción de Arbitraje</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-[#262B35]">
+                            {% for ord in disputed_orders %}
+                                <tr class="hover:bg-[#121417]/50 transition">
+                                    <td class="py-3 px-2 font-mono font-bold text-teal-400">
+                                        <a href="/orders/{{ ord.order_number }}" target="_blank" class="hover:underline">#{{ ord.order_number }}</a>
+                                    </td>
+                                    <td class="py-3 px-2 text-[#EAECEF]">{{ ord.buyer.full_name }}</td>
+                                    <td class="py-3 px-2 text-[#EAECEF]">{{ ord.seller.full_name }}</td>
+                                    <td class="py-3 px-2 font-black text-amber-400">${{ "%.2f"|format(ord.base_amount) }}</td>
+                                    <td class="py-3 px-2">
+                                        <span class="bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded text-[10px] font-bold">
+                                            {{ ord.status|capitalize }}
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-2 text-right space-x-2">
+                                        <button 
+                                            @click="resolveOrder({{ ord.id }}, 'release_seller')" 
+                                            class="px-2.5 py-1 bg-teal-500 hover:bg-teal-600 text-black font-bold text-[10px] rounded transition"
+                                        >
+                                            Liberar a Vendedor
+                                        </button>
+                                        <button 
+                                            @click="resolveOrder({{ ord.id }}, 'refund_buyer')" 
+                                            class="px-2.5 py-1 bg-red-500/20 hover:bg-red-500 text-red-300 hover:text-white font-bold text-[10px] rounded transition"
+                                        >
+                                            Reembolsar Comprador
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-xs text-[#B0B5BD] py-6 text-center">No hay pedidos en disputa en este momento. Todos los contratos operan con normalidad.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Tab 2: Gigs Moderation -->
+    <div x-show="tab === 'gigs'" class="space-y-4" style="display: none;">
+        <div class="gigly-card p-6">
+            <h3 class="text-sm font-bold text-[#EAECEF] uppercase tracking-wider mb-4">Catálogo de Servicios Publicados</h3>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="border-b border-[#262B35] text-[#B0B5BD] uppercase text-[10px]">
+                            <th class="py-3 px-2">Título</th>
+                            <th class="py-3 px-2">Vendedor</th>
+                            <th class="py-3 px-2">Categoría</th>
+                            <th class="py-3 px-2">Ventas</th>
+                            <th class="py-3 px-2">Estado</th>
+                            <th class="py-3 px-2 text-right">Moderación</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[#262B35]">
+                        {% for g in recent_gigs %}
+                            <tr class="hover:bg-[#121417]/50 transition">
+                                <td class="py-3 px-2 font-bold text-[#EAECEF] max-w-xs truncate">
+                                    <a href="/gigs/{{ g.slug }}" target="_blank" class="hover:text-teal-400">{{ g.title }}</a>
+                                </td>
+                                <td class="py-3 px-2 text-[#B0B5BD]">{{ g.seller.full_name }}</td>
+                                <td class="py-3 px-2 text-teal-400">{{ g.category }}</td>
+                                <td class="py-3 px-2 font-bold text-[#EAECEF]">{{ g.orders_count }}</td>
+                                <td class="py-3 px-2">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold {% if g.is_active %}bg-teal-500/20 text-teal-300{% else %}bg-red-500/20 text-red-300{% endif %}">
+                                        {% if g.is_active %}Activo{% else %}Pausado{% endif %}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-2 text-right">
+                                    <button 
+                                        @click="toggleGig({{ g.id }})" 
+                                        class="px-2.5 py-1 bg-[#121417] hover:bg-[#232731] border border-[#262B35] text-[#EAECEF] text-[10px] font-bold rounded"
+                                    >
+                                        {% if g.is_active %}Pausar{% else %}Activar{% endif %}
+                                    </button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 3: Users & Official Verification -->
+    <div x-show="tab === 'users'" class="space-y-4" style="display: none;">
+        <div class="gigly-card p-6">
+            <h3 class="text-sm font-bold text-[#EAECEF] uppercase tracking-wider mb-4">Gestión de Usuarios y Verificación Oficial</h3>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="border-b border-[#262B35] text-[#B0B5BD] uppercase text-[10px]">
+                            <th class="py-3 px-2">Usuario</th>
+                            <th class="py-3 px-2">Correo</th>
+                            <th class="py-3 px-2">Rol Base</th>
+                            <th class="py-3 px-2">Saldo Billetera</th>
+                            <th class="py-3 px-2">Insignia Verificado</th>
+                            <th class="py-3 px-2 text-right">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[#262B35]">
+                        {% for u in recent_users %}
+                            <tr class="hover:bg-[#121417]/50 transition">
+                                <td class="py-3 px-2 font-bold text-[#EAECEF] flex items-center gap-2">
+                                    <img src="{{ u.avatar_url }}" alt="Avatar" class="w-6 h-6 rounded-full object-cover">
+                                    <span>{{ u.full_name }}</span>
+                                    {% if u.is_admin %}
+                                        <span class="bg-red-500/20 text-red-400 text-[9px] px-1.5 py-0.2 rounded font-black">ADMIN</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3 px-2 text-[#B0B5BD]">{{ u.email }}</td>
+                                <td class="py-3 px-2 text-teal-400 capitalize">{{ u.current_mode }}</td>
+                                <td class="py-3 px-2 font-bold text-[#EAECEF]">${{ "%.2f"|format(u.wallet_balance) }}</td>
+                                <td class="py-3 px-2">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold {% if u.is_verified %}bg-teal-500/20 text-teal-300{% else %}bg-gray-800 text-gray-400{% endif %}">
+                                        {% if u.is_verified %}✓ Verificado{% else %}Pendiente{% endif %}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-2 text-right">
+                                    <button 
+                                        @click="toggleVerify({{ u.id }})" 
+                                        class="px-2.5 py-1 bg-[#121417] hover:bg-teal-500 hover:text-black border border-[#262B35] text-[#EAECEF] text-[10px] font-bold rounded transition"
+                                    >
+                                        {% if u.is_verified %}Quitar Verificación{% else %}Otorgar Badge Oficial{% endif %}
+                                    </button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}{{ proj_req.title }} • Subasta Gigly{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="{
+    async acceptProposal(propId) {
+        if (!confirm('¿Deseas adjudicar este proyecto a este freelancer e iniciar el pedido con Gigly Escrow?')) return;
+        const res = await fetch('/api/proposals/' + propId + '/accept', { method: 'POST' });
+        const data = await res.json();
+        if (data.success && data.redirect_url) {
+            window.location.href = data.redirect_url;
+        } else {
+            alert(data.error || 'Error al aceptar propuesta');
+        }
+    },
+    async submitProposalForm(e) {
+        e.preventDefault();
+        const form = e.target;
+        const formData = new FormData(form);
+        const res = await fetch('/api/requests/{{ proj_req.id }}/proposals', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+            Gigly.showToast('¡Propuesta enviada con éxito!');
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            alert(data.error || 'Error al postular propuesta');
+        }
+    }
+}">
+
+    <!-- Breadcrumb -->
+    <div class="flex items-center gap-2 text-xs text-[#B0B5BD] mb-4">
+        <a href="/requests" class="hover:text-teal-400">&larr; Volver al Tablero de Subastas</a>
+        <span>/</span>
+        <span class="text-[#EAECEF] truncate max-w-sm">{{ proj_req.title }}</span>
+    </div>
+
+    <!-- Project Overview Header -->
+    <div class="gigly-card p-6 mb-8 border border-[#262B35]">
+        <div class="flex flex-col md:flex-row md:items-start justify-between gap-6 pb-6 border-b border-[#262B35]">
+            <div class="space-y-3 max-w-2xl">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs font-semibold text-teal-400 bg-teal-500/10 px-2.5 py-0.5 rounded border border-teal-500/20">
+                        {{ proj_req.category }}
+                    </span>
+                    <span class="text-xs text-[#B0B5BD]">Publicado el {{ proj_req.created_at.strftime("%d/%m/%Y") }}</span>
+                    {% if proj_req.requires_nda %}
+                        <span class="badge-nda text-[10px] font-bold px-2 py-0.5 rounded">Exige NDA</span>
+                    {% endif %}
+                    {% if proj_req.allows_milestones %}
+                        <span class="badge-milestone text-[10px] font-bold px-2 py-0.5 rounded">Admite Hitos</span>
+                    {% endif %}
+                </div>
+
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-[#EAECEF] leading-tight">
+                    {{ proj_req.title }}
+                </h1>
+
+                <div class="flex items-center gap-2 text-xs text-[#B0B5BD]">
+                    <img src="{{ proj_req.buyer.avatar_url }}" alt="{{ proj_req.buyer.full_name }}" class="w-6 h-6 rounded-full object-cover">
+                    <span>Cliente: <strong class="text-[#EAECEF]">{{ proj_req.buyer.full_name }}</strong></span>
+                </div>
+            </div>
+
+            <!-- Budget Box -->
+            <div class="bg-[#121417] p-5 rounded-2xl border border-[#262B35] text-right shrink-0">
+                <span class="text-[10px] text-[#B0B5BD] block uppercase font-bold">Presupuesto Estimado</span>
+                <span class="text-2xl font-black text-emerald-400">${{ "%.0f"|format(proj_req.budget) }} USD</span>
+                <span class="text-[11px] text-[#B0B5BD] block mt-1"><i class="fa-regular fa-clock text-teal-400"></i> Plazo: {{ proj_req.delivery_days }} días</span>
+            </div>
+        </div>
+
+        <div class="pt-6 space-y-2">
+            <h3 class="text-xs font-bold text-[#EAECEF] uppercase tracking-wider">Detalles de los Requerimientos:</h3>
+            <p class="text-xs sm:text-sm text-[#B0B5BD] leading-relaxed whitespace-pre-line">
+                {{ proj_req.description }}
+            </p>
+        </div>
+    </div>
+
+    <!-- Proposals Section -->
+    <div class="space-y-6">
+        
+        <!-- Case 1: Freelancer proposal submission form (if not owner and not submitted yet) -->
+        {% if user and not is_owner and not user_proposal and proj_req.status == 'open' %}
+            <div class="gigly-card p-6 border border-teal-500/40 bg-[#1A1D24]">
+                <h3 class="text-sm font-bold text-teal-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-paper-plane"></i> Enviar mi Propuesta para este Proyecto
+                </h3>
+
+                <form @submit="submitProposalForm" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-[#B0B5BD] uppercase mb-1">Precio Cotizado ($ USD)</label>
+                            <input type="number" step="1" name="offered_price" value="{{ proj_req.budget }}" required class="w-full bg-[#121417] text-xs text-teal-400 font-bold p-2.5 rounded-lg border border-[#262B35] focus:border-teal-400">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-[#B0B5BD] uppercase mb-1">Días Estimados de Entrega</label>
+                            <input type="number" name="offered_days" value="{{ proj_req.delivery_days }}" required class="w-full bg-[#121417] text-xs text-[#EAECEF] p-2.5 rounded-lg border border-[#262B35] focus:border-teal-400">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-[#B0B5BD] uppercase mb-1">Carta de Presentación & Propuesta Técnica</label>
+                        <textarea name="cover_letter" rows="4" required placeholder="Explica al cliente tu enfoque, experiencia previa y cómo resolverás su requerimiento..." class="w-full bg-[#121417] text-xs text-[#EAECEF] p-3 rounded-lg border border-[#262B35] focus:border-teal-400"></textarea>
+                    </div>
+
+                    <button type="submit" class="px-6 py-3 bg-teal-500 hover:bg-teal-600 text-black font-extrabold text-xs rounded-lg transition shadow-md shadow-teal-500/20">
+                        Postular mi Propuesta
+                    </button>
+                </form>
+            </div>
+        {% elif user_proposal %}
+            <div class="gigly-card p-6 border border-teal-500/30 bg-teal-950/10 flex items-start justify-between">
+                <div>
+                    <span class="text-[10px] font-bold text-teal-400 uppercase">Tu Postulación</span>
+                    <h4 class="text-sm font-bold text-[#EAECEF] mt-1">Propuesta enviada: ${{ "%.2f"|format(user_proposal.offered_price) }} en {{ user_proposal.offered_days }} días</h4>
+                    <p class="text-xs text-[#B0B5BD] mt-2 italic">"{{ user_proposal.cover_letter }}"</p>
+                </div>
+                <span class="bg-teal-500/20 text-teal-300 text-xs font-bold px-3 py-1 rounded">
+                    Estado: {{ user_proposal.status|capitalize }}
+                </span>
+            </div>
+        {% endif %}
+
+        <!-- List of received proposals (Visible to Buyer) -->
+        <div>
+            <h3 class="text-base font-bold text-[#EAECEF] mb-4 flex items-center gap-2">
+                <span>Propuestas de Freelancers</span>
+                <span class="text-xs bg-[#1A1D24] text-teal-400 px-2.5 py-0.5 rounded-full border border-[#262B35]">{{ proposals|length }}</span>
+            </h3>
+
+            {% if proposals %}
+                <div class="space-y-4">
+                    {% for p in proposals %}
+                        <div class="gigly-card p-5 border border-[#262B35] space-y-3">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#262B35]">
+                                <div class="flex items-center gap-3">
+                                    <img src="{{ p.seller.avatar_url }}" alt="{{ p.seller.full_name }}" class="w-10 h-10 rounded-full object-cover border border-teal-500/40">
+                                    <div>
+                                        <h4 class="text-xs font-bold text-[#EAECEF]">{{ p.seller.full_name }}</h4>
+                                        <p class="text-[11px] text-[#B0B5BD]">★ {{ "%.1f"|format(p.seller.rating_avg) }} ({{ p.seller.reviews_count }} reseñas) • {{ p.created_at.strftime("%d/%m/%Y") }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center gap-4 text-right">
+                                    <div>
+                                        <span class="text-base font-black text-teal-400 block">${{ "%.0f"|format(p.offered_price) }}</span>
+                                        <span class="text-[10px] text-[#B0B5BD]">{{ p.offered_days }} días de entrega</span>
+                                    </div>
+
+                                    {% if is_owner and proj_req.status == 'open' %}
+                                        <button 
+                                            type="button" 
+                                            @click="acceptProposal({{ p.id }})" 
+                                            class="px-4 py-2 bg-teal-500 hover:bg-teal-600 text-black font-extrabold text-xs rounded-lg transition shadow-md shadow-teal-500/20"
+                                        >
+                                            Adjudicar & Iniciar Escrow
+                                        </button>
+                                    {% elif p.status == 'accepted' %}
+                                        <span class="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-3 py-1 rounded">
+                                            ✓ Propuesta Ganadora
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <p class="text-xs text-[#B0B5BD] leading-relaxed whitespace-pre-line">
+                                {{ p.cover_letter }}
+                            </p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="gigly-card p-8 text-center text-xs text-[#B0B5BD]">
+                    <i class="fa-regular fa-clock text-2xl text-teal-400 mb-2"></i>
+                    <p class="font-bold text-[#EAECEF]">Esperando propuestas de la comunidad</p>
+                    <p class="text-[11px] mt-1">Los freelancers están revisando la solicitud. Pronto recibirás ofertas detalladas.</p>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

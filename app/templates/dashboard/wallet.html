@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Billetera & Gigly Escrow • Gigly{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="{
+    showDepositModal: false,
+    showWithdrawModal: false,
+    depositAmount: 100,
+    withdrawAmount: 50,
+    payoutAccount: 'ES91 2100 0418 4502 0005 1332',
+    async submitDeposit() {
+        const formData = new FormData();
+        formData.append('amount', this.depositAmount);
+        const res = await fetch('/api/wallet/deposit', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (data.success) {
+            Gigly.showToast('Fondos recargados exitosamente.');
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            alert(data.error || 'Error al depositar');
+        }
+    },
+    async submitWithdraw() {
+        const formData = new FormData();
+        formData.append('amount', this.withdrawAmount);
+        formData.append('payout_account', this.payoutAccount);
+        const res = await fetch('/api/wallet/withdraw', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (data.success) {
+            Gigly.showToast('Retiro procesado correctamente.');
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            alert(data.error || 'Error al retirar');
+        }
+    }
+}">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+            <div class="flex items-center gap-2 text-xs text-[#B0B5BD] mb-1">
+                <a href="/" class="hover:text-teal-400">Inicio</a>
+                <span>/</span>
+                <span class="text-[#EAECEF]">Billetera Financiera</span>
+            </div>
+            <h1 class="text-3xl font-extrabold text-[#EAECEF]">Billetera & Gigly Escrow</h1>
+            <p class="text-xs text-[#B0B5BD] mt-1">Control de fondos disponibles, custodia activa de proyectos y trazabilidad contable</p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex items-center gap-3">
+            <button 
+                type="button" 
+                @click="showDepositModal = true" 
+                class="px-4 py-2.5 bg-teal-500 hover:bg-teal-600 text-black font-extrabold text-xs rounded-xl transition shadow-md shadow-teal-500/20 flex items-center gap-2"
+            >
+                <i class="fa-solid fa-plus"></i> Recargar Saldo
+            </button>
+            <button 
+                type="button" 
+                @click="showWithdrawModal = true" 
+                class="px-4 py-2.5 bg-[#1A1D24] hover:bg-[#232731] border border-[#262B35] text-xs font-bold text-[#EAECEF] rounded-xl transition flex items-center gap-2"
+            >
+                <i class="fa-solid fa-arrow-up-from-bracket"></i> Retirar Fondos
+            </button>
+        </div>
+    </div>
+
+    <!-- Financial KPI Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+        
+        <!-- Available Wallet Balance -->
+        <div class="gigly-card p-6 border border-teal-500/40 relative overflow-hidden">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-teal-400 uppercase tracking-wider">Saldo Disponible</span>
+                <div class="w-8 h-8 rounded-lg bg-teal-500/10 text-teal-400 flex items-center justify-center">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+            </div>
+            <p class="text-3xl font-black text-[#EAECEF] mt-3">${{ "%.2f"|format(user.wallet_balance) }} <span class="text-xs font-semibold text-[#B0B5BD]">USD</span></p>
+            <p class="text-[11px] text-[#B0B5BD] mt-1">Listo para contratar servicios o retirar a tu banco.</p>
+        </div>
+
+        <!-- Escrow Balance Held -->
+        <div class="gigly-card p-6 border border-amber-500/30 relative overflow-hidden">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-amber-400 uppercase tracking-wider">En Custodia Gigly Escrow</span>
+                <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+            </div>
+            <p class="text-3xl font-black text-amber-400 mt-3">${{ "%.2f"|format(user.escrow_balance) }} <span class="text-xs font-semibold text-[#B0B5BD]">USD</span></p>
+            <p class="text-[11px] text-[#B0B5BD] mt-1">Fondos protegidos en proyectos activos pendientes de aprobación.</p>
+        </div>
+
+        <!-- Total Earnings Released -->
+        <div class="gigly-card p-6 border border-[#262B35] relative overflow-hidden">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Total Liberado</span>
+                <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                    <i class="fa-solid fa-money-bill-trend-up"></i>
+                </div>
+            </div>
+            <p class="text-3xl font-black text-emerald-400 mt-3">${{ "%.2f"|format(total_earned) }} <span class="text-xs font-semibold text-[#B0B5BD]">USD</span></p>
+            <p class="text-[11px] text-[#B0B5BD] mt-1">Ingresos históricos obtenidos en Gigly con 10% de comisión.</p>
+        </div>
+
+    </div>
+
+    <!-- Transactions Ledger History -->
+    <div class="gigly-card p-6">
+        <div class="flex items-center justify-between pb-4 border-b border-[#262B35] mb-4">
+            <h3 class="text-sm font-bold text-[#EAECEF] uppercase tracking-wider flex items-center gap-2">
+                <i class="fa-solid fa-receipt text-teal-400"></i> Historial de Movimientos Contables
+            </h3>
+            <span class="text-xs text-[#B0B5BD]">{{ transactions|length }} transacciones</span>
+        </div>
+
+        {% if transactions %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="border-b border-[#262B35] text-[#B0B5BD] uppercase text-[10px] tracking-wider">
+                            <th class="py-3 px-2">Fecha</th>
+                            <th class="py-3 px-2">Tipo de Movimiento</th>
+                            <th class="py-3 px-2">Descripción</th>
+                            <th class="py-3 px-2 text-right">Monto</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[#262B35]">
+                        {% for tx in transactions %}
+                            <tr class="hover:bg-[#121417]/50 transition">
+                                <td class="py-3 px-2 text-[#B0B5BD]">{{ tx.created_at.strftime("%d/%m/%Y %H:%M") }}</td>
+                                <td class="py-3 px-2">
+                                    {% if tx.type == 'deposit' %}
+                                        <span class="bg-teal-500/20 text-teal-300 px-2 py-0.5 rounded font-bold">Depósito</span>
+                                    {% elif tx.type == 'escrow_hold' %}
+                                        <span class="bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-bold">Retención Escrow</span>
+                                    {% elif tx.type == 'escrow_release' %}
+                                        <span class="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-bold">Liberación Escrow</span>
+                                    {% elif tx.type == 'withdrawal' %}
+                                        <span class="bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded font-bold">Retiro</span>
+                                    {% else %}
+                                        <span class="bg-gray-800 text-gray-300 px-2 py-0.5 rounded font-bold">{{ tx.type|capitalize }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3 px-2 text-[#EAECEF] font-medium">{{ tx.description }}</td>
+                                <td class="py-3 px-2 text-right font-black {% if tx.amount > 0 %}text-emerald-400{% else %}text-red-400{% endif %}">
+                                    {% if tx.amount > 0 %}+{% endif %}${{ "%.2f"|format(tx.amount) }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-xs text-[#B0B5BD] text-center py-8">No hay transacciones registradas aún en tu cuenta.</p>
+        {% endif %}
+    </div>
+
+    <!-- Deposit Modal -->
+    <div x-show="showDepositModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" style="display: none;">
+        <div class="gigly-card w-full max-w-md p-6 border border-teal-500/40 space-y-4">
+            <div class="flex items-center justify-between border-b border-[#262B35] pb-2">
+                <h3 class="text-sm font-bold text-[#EAECEF]">Recargar Billetera Gigly</h3>
+                <button @click="showDepositModal = false" class="text-[#B0B5BD] hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-[#B0B5BD] uppercase mb-1">Monto a Recargar ($ USD)</label>
+                <input type="number" x-model="depositAmount" class="w-full bg-[#121417] text-sm text-teal-400 font-bold p-2.5 rounded-lg border border-[#262B35]">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-[#B0B5BD] uppercase mb-1">Método de Pago Simulado</label>
+                <select class="w-full bg-[#121417] text-xs text-[#EAECEF] p-2.5 rounded-lg border border-[#262B35]">
+                    <option value="card">Tarjeta de Crédito/Débito (Demo)</option>
+                    <option value="paypal">PayPal Instantáneo</option>
+                    <option value="crypto">USDT / USDC Crypto Escrow</option>
+                </select>
+            </div>
+            <button @click="submitDeposit()" class="w-full py-3 bg-teal-500 hover:bg-teal-600 text-black font-extrabold text-xs rounded-lg transition">
+                Confirmar Depósito Demo
+            </button>
+        </div>
+    </div>
+
+    <!-- Withdraw Modal -->
+    <div x-show="showWithdrawModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" style="display: none;">
+        <div class="gigly-card w-full max-w-md p-6 border border-teal-500/40 space-y-4">
+            <div class="flex items-center justify-between border-b border-[#262B35] pb-2">
+                <h3 class="text-sm font-bold text-[#EAECEF]">Retirar Fondos a Cuenta Bancaria</h3>
+                <button @click="showWithdrawModal = false" class="text-[#B0B5BD] hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-[#B0B5BD] uppercase mb-1">Monto a Retirar ($ USD)</label>
+                <input type="number" x-model="withdrawAmount" max="{{ user.wallet_balance }}" class="w-full bg-[#121417] text-sm text-teal-400 font-bold p-2.5 rounded-lg border border-[#262B35]">
+                <span class="text-[10px] text-[#B0B5BD]">Disponible máximo: ${{ "%.2f"|format(user.wallet_balance) }}</span>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-[#B0B5BD] uppercase mb-1">Número de Cuenta IBAN o Correo PayPal</label>
+                <input type="text" x-model="payoutAccount" class="w-full bg-[#121417] text-xs text-[#EAECEF] p-2.5 rounded-lg border border-[#262B35]">
+            </div>
+            <button @click="submitWithdraw()" class="w-full py-3 bg-teal-500 hover:bg-teal-600 text-black font-extrabold text-xs rounded-lg transition">
+                Procesar Retiro
+            </button>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

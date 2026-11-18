@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Iniciar Sesión • Gigly{% endblock %}
+
+{% block content %}
+<div class="min-h-[75vh] flex items-center justify-center px-4 py-12">
+    <div class="gigly-card w-full max-w-md p-8 border border-[#262B35] shadow-2xl relative">
+        <!-- Logo -->
+        <div class="text-center mb-8">
+            <a href="/" class="inline-flex items-center gap-1 text-3xl font-extrabold text-[#EAECEF]">
+                <span>Gig</span><span class="text-teal-400">ly</span>
+                <span class="w-2.5 h-2.5 rounded-full bg-teal-400 ml-0.5"></span>
+            </a>
+            <h2 class="text-xl font-bold text-[#EAECEF] mt-3">Bienvenido de vuelta</h2>
+            <p class="text-xs text-[#B0B5BD] mt-1">Ingresa tus credenciales para acceder a tu cuenta</p>
+        </div>
+
+        {% if error %}
+            <div class="bg-red-500/10 border border-red-500/30 text-red-400 text-xs p-3 rounded-lg mb-6 flex items-center gap-2">
+                <i class="fa-solid fa-circle-exclamation text-sm"></i>
+                <span>{{ error }}</span>
+            </div>
+        {% endif %}
+
+        <form action="/login" method="POST" class="space-y-4">
+            <div>
+                <label class="block text-xs font-semibold text-[#B0B5BD] uppercase tracking-wider mb-1.5">Usuario o Correo Electrónico</label>
+                <div class="relative">
+                    <i class="fa-regular fa-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-[#B0B5BD] text-xs"></i>
+                    <input 
+                        type="text" 
+                        name="username_or_email" 
+                        required 
+                        placeholder="tu_usuario o correo@ejemplo.com"
+                        class="w-full bg-[#121417] text-sm text-[#EAECEF] placeholder-[#555B66] pl-10 pr-4 py-2.5 rounded-lg border border-[#262B35] focus:outline-none focus:border-teal-400 transition"
+                    >
+                </div>
+            </div>
+
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="text-xs font-semibold text-[#B0B5BD] uppercase tracking-wider">Contraseña</label>
+                    <span class="text-[11px] text-teal-400 hover:underline cursor-pointer">¿La olvidaste?</span>
+                </div>
+                <div class="relative">
+                    <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-[#B0B5BD] text-xs"></i>
+                    <input 
+                        type="password" 
+                        name="password" 
+                        required 
+                        placeholder="••••••••"
+                        class="w-full bg-[#121417] text-sm text-[#EAECEF] placeholder-[#555B66] pl-10 pr-4 py-2.5 rounded-lg border border-[#262B35] focus:outline-none focus:border-teal-400 transition"
+                    >
+                </div>
+            </div>
+
+            <button 
+                type="submit" 
+                class="w-full py-3 bg-teal-500 hover:bg-teal-600 text-black font-extrabold text-sm rounded-lg transition shadow-md shadow-teal-500/20 mt-2"
+            >
+                Entrar a Gigly
+            </button>
+        </form>
+
+        <!-- Demo Accounts Hint -->
+        <div class="mt-6 p-3 rounded-lg bg-[#121417] border border-[#262B35] text-xs text-[#B0B5BD]">
+            <p class="font-bold text-[#EAECEF] mb-1">Cuentas demo para probar:</p>
+            <p class="text-[11px]">Usuario: <code class="text-teal-400">demo_freelancer</code> | Clave: <code class="text-teal-400">password123</code></p>
+            <p class="text-[11px]">Usuario: <code class="text-teal-400">demo_client</code> | Clave: <code class="text-teal-400">password123</code></p>
+        </div>
+
+        <div class="text-center mt-6 text-xs text-[#B0B5BD]">
+            ¿No tienes cuenta aún? <a href="/register" class="text-teal-400 font-bold hover:underline">Regístrate gratis</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

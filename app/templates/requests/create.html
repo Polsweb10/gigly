@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Publicar Solicitud de Proyecto • Subasta Gigly{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    
+    <div class="mb-8">
+        <h1 class="text-3xl font-extrabold text-[#EAECEF]">Publicar Solicitud Inversa</h1>
+        <p class="text-xs text-[#B0B5BD] mt-1">Describe lo que necesitas con un presupuesto abierto y recibe cotizaciones personalizadas de los mejores freelancers.</p>
+    </div>
+
+    <form action="/requests/new" method="POST" class="gigly-card p-8 border border-[#262B35] space-y-6">
+        
+        <div>
+            <label class="block text-xs font-bold text-[#B0B5BD] uppercase tracking-wider mb-1.5">Título del Proyecto / Necesidad</label>
+            <input 
+                type="text" 
+                name="title" 
+                required 
+                placeholder="Ej. Desarrollo de un MVP de comercio electrónico con pasarela de pagos y panel de administración"
+                class="w-full bg-[#121417] text-sm text-[#EAECEF] placeholder-[#555B66] px-4 py-2.5 rounded-lg border border-[#262B35] focus:outline-none focus:border-teal-400 transition"
+            >
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-xs font-bold text-[#B0B5BD] uppercase tracking-wider mb-1.5">Categoría</label>
+                <select name="category" required class="w-full bg-[#121417] text-xs text-[#EAECEF] p-2.5 rounded-lg border border-[#262B35] focus:border-teal-400">
+                    {% for cat in categories %}
+                        <option value="{{ cat }}">{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-[#B0B5BD] uppercase tracking-wider mb-1.5">Plazo Máximo Esperado (Días)</label>
+                <input 
+                    type="number" 
+                    name="delivery_days" 
+                    value="14" 
+                    required 
+                    class="w-full bg-[#121417] text-sm text-[#EAECEF] px-4 py-2 rounded-lg border border-[#262B35] focus:border-teal-400"
+                >
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-xs font-bold text-[#B0B5BD] uppercase tracking-wider mb-1.5">Presupuesto Estimado ($ USD)</label>
+            <div class="relative">
+                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-teal-400 font-bold">$</span>
+                <input 
+                    type="number" 
+                    step="1" 
+                    name="budget" 
+                    required 
+                    placeholder="500" 
+                    class="w-full bg-[#121417] text-sm text-teal-400 font-bold pl-8 pr-4 py-2.5 rounded-lg border border-[#262B35] focus:border-teal-400"
+                >
+            </div>
+            <p class="text-[11px] text-[#B0B5BD] mt-1">Los freelancers podrán ofertar este valor o enviar contrapropuestas.</p>
+        </div>
+
+        <div>
+            <label class="block text-xs font-bold text-[#B0B5BD] uppercase tracking-wider mb-1.5">Descripción Detallada del Requerimiento</label>
+            <textarea 
+                name="description" 
+                rows="6" 
+                required 
+                placeholder="Explica detalladamente qué objetivos debe cumplir el proyecto, entregables esperados, tecnologías preferidas y cualquier criterio de aceptación..."
+                class="w-full bg-[#121417] text-sm text-[#EAECEF] placeholder-[#555B66] p-4 rounded-lg border border-[#262B35] focus:outline-none focus:border-teal-400 transition"
+            ></textarea>
+        </div>
+
+        <!-- Gigly Protections Switches -->
+        <div class="p-4 rounded-xl bg-[#121417] border border-[#262B35] space-y-3">
+            <label class="flex items-start gap-3 cursor-pointer">
+                <input type="checkbox" name="requires_nda" value="true" class="mt-0.5 accent-purple-500">
+                <div>
+                    <span class="text-xs font-bold text-[#EAECEF] flex items-center gap-1.5">
+                        <i class="fa-solid fa-file-contract text-purple-400"></i> Exigir Contrato de Confidencialidad (NDA) antes de revelar detalles
+                    </span>
+                    <p class="text-[11px] text-[#B0B5BD]">El freelancer deberá firmar digitalmente el acuerdo al adjudicarse el proyecto.</p>
+                </div>
+            </label>
+
+            <label class="flex items-start gap-3 cursor-pointer">
+                <input type="checkbox" name="allows_milestones" value="true" checked class="mt-0.5 accent-teal-500">
+                <div>
+                    <span class="text-xs font-bold text-[#EAECEF] flex items-center gap-1.5">
+                        <i class="fa-solid fa-layer-group text-teal-400"></i> Permitir división en Pagos por Hitos (Milestones)
+                    </span>
+                    <p class="text-[11px] text-[#B0B5BD]">Recomendado para proyectos medianos y grandes. Te permite pagar conforme se aprueban fases.</p>
+                </div>
+            </label>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-[#262B35]">
+            <a href="/requests" class="px-5 py-2.5 bg-[#121417] text-xs font-bold text-[#EAECEF] rounded-lg transition hover:bg-[#1A1D24]">Cancelar</a>
+            <button 
+                type="submit" 
+                class="px-8 py-3 bg-teal-500 hover:bg-teal-600 text-black font-extrabold text-sm rounded-xl transition shadow-lg shadow-teal-500/20"
+            >
+                Publicar Proyecto en Subasta
+            </button>
+        </div>
+
+    </form>
+</div>
+{% endblock %}

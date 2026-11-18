@@ -1,0 +1,345 @@
+{% extends "base.html" %}
+
+{% block title %}Gigly • Servicios Freelance de Élite con Protección Escrow{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="relative overflow-hidden pt-12 pb-20 border-b border-[#262B35]">
+    <!-- Background subtle turquoise glow -->
+    <div class="absolute -top-40 -left-40 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute top-20 -right-40 w-96 h-96 bg-teal-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="max-w-3xl mx-auto text-center space-y-6">
+            
+            <!-- Super Badge -->
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-500/10 border border-teal-500/30 text-teal-400 text-xs font-semibold tracking-wide">
+                <span class="w-2 h-2 rounded-full bg-teal-400 animate-ping"></span>
+                <span>Descubre la evolución del freelance con Gigly Escrow</span>
+            </div>
+
+            <!-- Main Headline -->
+            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#EAECEF] leading-tight">
+                Contrata talento freelance con <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-400">seguridad absoluta</span>
+            </h1>
+
+            <p class="text-base sm:text-lg text-[#B0B5BD] leading-relaxed">
+                Olvídate de las estafas y comisiones abusivas. Gigly te ofrece pagos por hitos, marcas de agua automáticas anti-robo, acuerdos NDA con un clic y chat con videollamadas integradas.
+            </p>
+
+            <!-- Prominent Hero Search Form -->
+            <div class="bg-[#1A1D24] p-2 sm:p-3 rounded-2xl border border-[#262B35] shadow-2xl max-w-2xl mx-auto">
+                <form action="/gigs" method="GET" class="flex flex-col sm:flex-row items-center gap-2">
+                    <div class="relative flex-grow w-full">
+                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-[#B0B5BD] text-sm"></i>
+                        <input 
+                            type="text" 
+                            name="q" 
+                            placeholder="¿Qué servicio profesional necesitas hoy?"
+                            class="w-full bg-transparent pl-11 pr-4 py-3 text-sm text-[#EAECEF] placeholder-[#B0B5BD] focus:outline-none"
+                        >
+                    </div>
+                    <button 
+                        type="submit" 
+                        class="w-full sm:w-auto px-6 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 text-black font-bold text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-teal-500/20"
+                    >
+                        <span>Buscar en Gigly</span>
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Popular Quick Tags -->
+            <div class="flex flex-wrap items-center justify-center gap-2 text-xs text-[#B0B5BD] pt-2">
+                <span class="font-medium text-[#EAECEF]">Popular:</span>
+                <a href="/gigs?q=FastAPI" class="px-2.5 py-1 rounded-md bg-[#1A1D24] hover:border-teal-400 border border-[#262B35] transition">FastAPI</a>
+                <a href="/gigs?q=Logo" class="px-2.5 py-1 rounded-md bg-[#1A1D24] hover:border-teal-400 border border-[#262B35] transition">Diseño de Logo</a>
+                <a href="/gigs?q=Python" class="px-2.5 py-1 rounded-md bg-[#1A1D24] hover:border-teal-400 border border-[#262B35] transition">Python Full-Stack</a>
+                <a href="/gigs?q=UI%2FUX" class="px-2.5 py-1 rounded-md bg-[#1A1D24] hover:border-teal-400 border border-[#262B35] transition">UI/UX Figma</a>
+                <a href="/gigs?q=SEO" class="px-2.5 py-1 rounded-md bg-[#1A1D24] hover:border-teal-400 border border-[#262B35] transition">SEO Avanzado</a>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- Stats & Trust Row -->
+<div class="bg-[#1A1D24]/60 border-b border-[#262B35] py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+            <div>
+                <p class="text-3xl font-extrabold text-teal-400">100%</p>
+                <p class="text-xs text-[#B0B5BD] mt-1 font-medium">Custodia Gigly Escrow Garantizada</p>
+            </div>
+            <div>
+                <p class="text-3xl font-extrabold text-[#EAECEF]">10%</p>
+                <p class="text-xs text-[#B0B5BD] mt-1 font-medium">Comisión Justa al Vendedor (No 20%)</p>
+            </div>
+            <div>
+                <p class="text-3xl font-extrabold text-teal-400">0 Fugas</p>
+                <p class="text-xs text-[#B0B5BD] mt-1 font-medium">Bóveda con Marca de Agua Anti-Robo</p>
+            </div>
+            <div>
+                <p class="text-3xl font-extrabold text-[#EAECEF]">1-Clic</p>
+                <p class="text-xs text-[#B0B5BD] mt-1 font-medium">Firma Digital de Contratos NDA</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Explore Categories -->
+<section class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h2 class="text-2xl font-bold text-[#EAECEF]">Categorías Principales</h2>
+            <p class="text-xs text-[#B0B5BD] mt-1">Explora servicios especializados verificados por Gigly</p>
+        </div>
+        <a href="/gigs" class="text-xs font-semibold text-teal-400 hover:text-teal-300 transition flex items-center gap-1">
+            Ver todas las categorías <i class="fa-solid fa-chevron-right text-[10px]"></i>
+        </a>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
+        {% set icons = {
+            'Programación & Tech': 'fa-code',
+            'Diseño & Creatividad': 'fa-pen-nib',
+            'Marketing Digital': 'fa-chart-pie',
+            'Redacción & Traducción': 'fa-book-open',
+            'Video & Animación': 'fa-film',
+            'Audio & Música': 'fa-music',
+            'Negocios & Finanzas': 'fa-briefcase'
+        } %}
+        {% for cat in categories %}
+            <a href="/gigs?category={{ cat|urlencode }}" class="gigly-card p-4 flex flex-col items-center justify-center text-center group hover:border-teal-500/50 hover:bg-[#222630] transition duration-200">
+                <div class="w-12 h-12 rounded-xl bg-teal-500/10 text-teal-400 flex items-center justify-center mb-3 group-hover:scale-110 transition duration-200">
+                    <i class="fa-solid {{ icons.get(cat, 'fa-star') }} text-lg"></i>
+                </div>
+                <span class="text-xs font-bold text-[#EAECEF] group-hover:text-teal-400 transition leading-tight">{{ cat }}</span>
+            </a>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Gigly Competitive Advantages vs Traditional Platforms -->
+<section class="py-16 bg-[#1A1D24]/40 border-y border-[#262B35]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-2xl mx-auto mb-12">
+            <span class="text-xs font-bold uppercase tracking-wider text-teal-400">¿Por qué Gigly?</span>
+            <h2 class="text-3xl font-extrabold text-[#EAECEF] mt-2">La ventaja competitiva de Gigly</h2>
+            <p class="text-xs sm:text-sm text-[#B0B5BD] mt-2">Tecnología de avanzada diseñada para proteger a los mejores clientes y retener a los freelancers más talentosos.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- Advantage 1 -->
+            <div class="gigly-card p-6 relative overflow-hidden group">
+                <div class="w-10 h-10 rounded-lg bg-teal-500/10 text-teal-400 flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-list-check text-lg"></i>
+                </div>
+                <h3 class="text-base font-bold text-[#EAECEF] mb-2">Pagos por Hitos (Milestones)</h3>
+                <p class="text-xs text-[#B0B5BD] leading-relaxed">
+                    Divide proyectos grandes en fases y libera fondos parcialmente conforme se entregan resultados reales. No arriesgues todo tu presupuesto de golpe.
+                </p>
+                <div class="mt-4 inline-block text-[11px] font-semibold text-teal-400">Flexibilidad total &rarr;</div>
+            </div>
+
+            <!-- Advantage 2 -->
+            <div class="gigly-card p-6 relative overflow-hidden group">
+                <div class="w-10 h-10 rounded-lg bg-teal-500/10 text-teal-400 flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-water text-lg"></i>
+                </div>
+                <h3 class="text-base font-bold text-[#EAECEF] mb-2">Bóveda con Marca de Agua</h3>
+                <p class="text-xs text-[#B0B5BD] leading-relaxed">
+                    El sistema aplica automáticamente una marca de agua diagonal protegida a los entregables. El comprador inspecciona el trabajo y solo descarga el archivo limpio tras aprobar el pago.
+                </p>
+                <div class="mt-4 inline-block text-[11px] font-semibold text-teal-400">Cero robos de trabajo &rarr;</div>
+            </div>
+
+            <!-- Advantage 3 -->
+            <div class="gigly-card p-6 relative overflow-hidden group">
+                <div class="w-10 h-10 rounded-lg bg-teal-500/10 text-teal-400 flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-file-contract text-lg"></i>
+                </div>
+                <h3 class="text-base font-bold text-[#EAECEF] mb-2">Contratos NDA con 1 Clic</h3>
+                <p class="text-xs text-[#B0B5BD] leading-relaxed">
+                    Protege tu propiedad intelectual antes de compartir información sensible. El vendedor firma un acuerdo digital legal con timestamp y hash encriptado.
+                </p>
+                <div class="mt-4 inline-block text-[11px] font-semibold text-teal-400">Confidencialidad empresarial &rarr;</div>
+            </div>
+
+            <!-- Advantage 4 -->
+            <div class="gigly-card p-6 relative overflow-hidden group">
+                <div class="w-10 h-10 rounded-lg bg-teal-500/10 text-teal-400 flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-gavel text-lg"></i>
+                </div>
+                <h3 class="text-base font-bold text-[#EAECEF] mb-2">Tablero de Solicitudes Inversas</h3>
+                <p class="text-xs text-[#B0B5BD] leading-relaxed">
+                    ¿No encuentras el servicio exacto? Publica tu proyecto con presupuesto abierto y recibe propuestas personalizadas con ofertas competitivas.
+                </p>
+                <div class="mt-4 inline-block text-[11px] font-semibold text-teal-400">Subasta transparente &rarr;</div>
+            </div>
+
+            <!-- Advantage 5 -->
+            <div class="gigly-card p-6 relative overflow-hidden group">
+                <div class="w-10 h-10 rounded-lg bg-teal-500/10 text-teal-400 flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-video text-lg"></i>
+                </div>
+                <h3 class="text-base font-bold text-[#EAECEF] mb-2">Chat & Videollamadas HD</h3>
+                <p class="text-xs text-[#B0B5BD] leading-relaxed">
+                    Reuniones instantáneas seguras con un solo clic impulsadas por Jitsi Meet dentro de la sala de tu pedido, sin salir de Gigly ni compartir números telefónicos.
+                </p>
+                <div class="mt-4 inline-block text-[11px] font-semibold text-teal-400">Comunicación fluida &rarr;</div>
+            </div>
+
+            <!-- Advantage 6 -->
+            <div class="gigly-card p-6 relative overflow-hidden group">
+                <div class="w-10 h-10 rounded-lg bg-teal-500/10 text-teal-400 flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-repeat text-lg"></i>
+                </div>
+                <h3 class="text-base font-bold text-[#EAECEF] mb-2">Suscripciones & Retainers</h3>
+                <p class="text-xs text-[#B0B5BD] leading-relaxed">
+                    Contrata servicios mensuales continuos (mantenimiento web, redes sociales, diseño por demanda) con cargos recurrentes y soporte continuo.
+                </p>
+                <div class="mt-4 inline-block text-[11px] font-semibold text-teal-400">Relaciones a largo plazo &rarr;</div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- Featured Gigs Catalog Section -->
+<section class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h2 class="text-2xl font-bold text-[#EAECEF]">Gigs Destacados en Gigly</h2>
+            <p class="text-xs text-[#B0B5BD] mt-1">Servicios verificados listos para contratación inmediata con Gigly Escrow</p>
+        </div>
+        <a href="/gigs" class="text-xs font-semibold text-teal-400 hover:text-teal-300 transition flex items-center gap-1">
+            Explorar catálogo completo <i class="fa-solid fa-arrow-right text-[10px]"></i>
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {% for gig in featured_gigs %}
+            {% set basic_pkg = gig.packages[0] if gig.packages else None %}
+            <div class="gigly-card overflow-hidden flex flex-col group hover:-translate-y-1 transition duration-200">
+                <!-- Image Header -->
+                <div class="relative h-44 overflow-hidden bg-black/40">
+                    <img src="{{ gig.image_url }}" alt="{{ gig.title }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                    
+                    <!-- Category Badge -->
+                    <span class="absolute top-3 left-3 bg-[#121417]/80 backdrop-blur-md text-[10px] font-bold text-[#EAECEF] px-2.5 py-1 rounded-md border border-[#262B35]">
+                        {{ gig.category }}
+                    </span>
+
+                    <!-- NDA Badge if enabled -->
+                    {% if gig.requires_nda %}
+                        <span class="absolute top-3 right-3 badge-nda text-[10px] font-bold px-2 py-0.5 rounded">
+                            <i class="fa-solid fa-lock text-[9px]"></i> NDA
+                        </span>
+                    {% endif %}
+                </div>
+
+                <!-- Card Body -->
+                <div class="p-4 flex-grow flex flex-col justify-between">
+                    <div>
+                        <!-- Seller Info -->
+                        <div class="flex items-center gap-2 mb-2">
+                            <img src="{{ gig.seller.avatar_url }}" alt="{{ gig.seller.full_name }}" class="w-6 h-6 rounded-full object-cover border border-teal-500/40">
+                            <span class="text-xs font-medium text-[#B0B5BD] truncate">{{ gig.seller.full_name }}</span>
+                            <span class="text-[10px] bg-teal-500/20 text-teal-400 px-1.5 py-0.2 rounded font-bold ml-auto">Pro</span>
+                        </div>
+
+                        <!-- Gig Title -->
+                        <a href="/gigs/{{ gig.slug }}" class="block text-sm font-semibold text-[#EAECEF] hover:text-teal-400 transition line-clamp-2 mb-3">
+                            {{ gig.title }}
+                        </a>
+                    </div>
+
+                    <!-- Rating & Pricing Footer -->
+                    <div class="border-t border-[#262B35] pt-3 flex items-center justify-between">
+                        <div class="flex items-center gap-1 text-xs">
+                            <i class="fa-solid fa-star text-amber-400 text-xs"></i>
+                            <span class="font-bold text-[#EAECEF]">{{ "%.1f"|format(gig.rating_avg) }}</span>
+                            <span class="text-[#B0B5BD] text-[10px]">({{ gig.rating_count }})</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] text-[#B0B5BD] block uppercase tracking-wider">A partir de</span>
+                            <span class="text-base font-extrabold text-teal-400">${{ "%.0f"|format(basic_pkg.price if basic_pkg else 50) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Reverse Requests Live Board Preview -->
+<section class="py-16 bg-[#1A1D24]/60 border-t border-[#262B35]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <span class="text-xs font-bold text-amber-400 uppercase tracking-wider">Tablero Abierto</span>
+                <h2 class="text-2xl font-bold text-[#EAECEF] mt-1">Solicitudes Inversas Recientes</h2>
+                <p class="text-xs text-[#B0B5BD]">Clientes buscando freelancers ahora mismo con presupuestos asignados</p>
+            </div>
+            <a href="/requests" class="text-xs font-semibold text-teal-400 hover:text-teal-300 transition flex items-center gap-1">
+                Ver todas las subastas <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% for req in recent_requests %}
+                <div class="gigly-card p-5 flex flex-col justify-between hover:border-teal-500/40 transition">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-semibold text-teal-400 bg-teal-500/10 px-2.5 py-0.5 rounded border border-teal-500/20">
+                                {{ req.category }}
+                            </span>
+                            <span class="text-xs text-[#B0B5BD]">
+                                <i class="fa-regular fa-clock"></i> {{ req.delivery_days }} días de entrega
+                            </span>
+                        </div>
+                        <h3 class="text-base font-bold text-[#EAECEF] hover:text-teal-400 transition mb-2">
+                            <a href="/requests/{{ req.id }}">{{ req.title }}</a>
+                        </h3>
+                        <p class="text-xs text-[#B0B5BD] line-clamp-2 leading-relaxed mb-4">
+                            {{ req.description }}
+                        </p>
+                    </div>
+
+                    <div class="border-t border-[#262B35] pt-3 flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] text-[#B0B5BD] block uppercase">Presupuesto Abierto</span>
+                            <span class="text-lg font-black text-emerald-400">${{ "%.0f"|format(req.budget) }} USD</span>
+                        </div>
+                        <a href="/requests/{{ req.id }}" class="px-4 py-2 bg-teal-500 hover:bg-teal-600 text-black text-xs font-bold rounded-lg transition shadow-sm">
+                            Enviar Propuesta ({{ req.proposals_count }})
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action Banner -->
+<section class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="gigly-card p-8 sm:p-12 relative overflow-hidden bg-gradient-to-br from-[#1A1D24] via-[#161920] to-teal-950/40 border border-teal-500/30 text-center">
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-[#EAECEF] mb-4">
+            Comienza a trabajar o contratar en Gigly hoy
+        </h2>
+        <p class="text-sm text-[#B0B5BD] max-w-xl mx-auto mb-8 leading-relaxed">
+            Sin intermediarios abusivos. Plataforma transparente con 10% de comisión para vendedores y protección Escrow total para compradores.
+        </p>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a href="/register" class="w-full sm:w-auto px-8 py-3.5 bg-teal-500 hover:bg-teal-600 text-black font-extrabold text-sm rounded-xl transition shadow-lg shadow-teal-500/25">
+                Crear Cuenta Gratuita
+            </a>
+            <a href="/gigs" class="w-full sm:w-auto px-8 py-3.5 bg-[#121417] hover:bg-[#1A1D24] text-[#EAECEF] border border-[#262B35] font-bold text-sm rounded-xl transition">
+                Explorar Servicios
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

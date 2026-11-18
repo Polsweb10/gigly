@@ -1,0 +1,582 @@
+{% extends "base.html" %}
+
+{% block title %}Sala del Pedido #{{ order.order_number }} • Gigly{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="{
+    activeTab: 'workspace',
+    showJitsiModal: false,
+    jitsiUrl: '',
+    ndaSigned: {{ 'true' if order.nda_signed else 'false' }},
+    legalName: '{{ user.full_name }}',
+    ndaAgreed: false,
+    async signNDA() {
+        if (!this.ndaAgreed) {
+            alert('Debes marcar la casilla aceptando los términos de confidencialidad.');
+            return;
+        }
+        const formData = new FormData();
+        formData.append('legal_name', this.legalName);
+        formData.append('agreed', this.ndaAgreed);
+        
+        const res = await fetch('/api/orders/{{ order.id }}/sign-nda', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+            this.ndaSigned = true;
+            Gigly.showToast('Contrato de Confidencialidad firmado con éxito.');
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            alert(data.error || 'Error al firmar NDA');
+        }
+    },
+    async approveFullOrder() {
+        if (!confirm('¿Confirmas que has revisado la entrega y apruebas la liberación de fondos ($' + '{{ order.seller_net_amount }}' + ' USD) al vendedor?')) return;
+        
+        const res = await fetch('/api/orders/{{ order.id }}/approve', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+            Gigly.showToast('¡Entrega aprobada y fondos liberados!');
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            alert(data.error || 'Error al aprobar entrega');
+        }
+    },
+    async approveMilestone(mId) {
+        if (!confirm('¿Deseas aprobar este hito y liberar el pago correspondiente?')) return;
+        const res = await fetch('/api/orders/{{ order.id }}/milestones/' + mId + '/approve', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+            Gigly.showToast('Hito aprobado y pago parcial liberado.');
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            alert(data.error || 'Error al aprobar hito');
+        }
+    },
+    async startVideoCall() {
+        const res = await fetch('/api/orders/{{ order.id }}/start-call', { method: 'POST' });
+        const data = await res.json();
+        if (data.success && data.meeting_url) {
+            this.jitsiUrl = data.meeting_url;
+            this.showJitsiModal = true;
+        }
+    }
+}">
+
+    <!-- Top Order Info & Progress Bar -->
+    <div class="gigly-card p-6 mb-8 border border-[#262B35]">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-[#262B35]">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="text-xs font-mono font-bold text-teal-400 bg-teal-500/10 px-2.5 py-0.5 rounded border border-teal-500/30">
+                        #{{ order.order_number }}
+                    </span>
+                    <span class="text-xs text-[#B0B5BD]">Iniciado el {{ order.created_at.strftime("%d/%m/%Y a las %H:%M") }}</span>
+                    {% if order.is_milestone_based %}
+                        <span class="badge-milestone text-[10px] font-bold px-2 py-0.5 rounded">Pagos por Hitos</span>
+                    {% endif %}
+                </div>
+                <h1 class="text-xl sm:text-2xl font-black text-[#EAECEF]">{{ order.title }}</h1>
+                <p class="text-xs text-[#B0B5BD] mt-1">
+                    Comprador: <strong class="text-[#EAECEF]">{{ order.buyer.full_name }}</strong> • 
+                    Vendedor: <strong class="text-[#EAECEF]">{{ order.seller.full_name }}</strong>
+                </p>
+            </div>
+
+            <!-- Financial escrow status indicator -->
+            <div class="bg-[#121417] p-4 rounded-xl border border-[#262B35] text-right shrink-0">
+                <span class="text-[10px] text-[#B0B5BD] block uppercase tracking-wider font-bold">Estado de Fondos</span>
+                <div class="flex items-center gap-2 justify-end">
+                    <i class="fa-solid fa-shield-halved text-teal-400 text-sm"></i>
+                    <span class="text-xl font-black text-teal-400">${{ "%.2f"|format(order.base_amount) }}</span>
+                </div>
+                <span class="text-[10px] {% if order.status == 'completed' %}text-emerald-400{% else %}text-amber-400{% endif %} font-medium">
+                    {% if order.status == 'completed' %}✓ Liberado al vendedor{% else %}🔒 En custodia Gigly Escrow{% endif %}
+                </span>
+            </div>
+        </div>
+
+        <!-- Visual Order Status Progress Flow -->
+        <div class="pt-6">
+            {% set statuses = ['pending', 'in_progress', 'delivered', 'completed'] %}
+            {% set status_labels = {
+                'pending': 'Pendiente',
+                'in_progress': 'En Progreso',
+                'delivered': 'Entregado (Revisión)',
+                'completed': 'Completado'
+            } %}
+            <div class="grid grid-cols-4 gap-2 text-center text-xs">
+                {% for st in statuses %}
+                    {% set is_passed = (order.status == 'completed') or (st == 'pending') or (st == 'in_progress' and order.status in ['in_progress', 'delivered', 'in_review']) or (st == 'delivered' and order.status in ['delivered', 'in_review']) %}
+                    {% set is_current = (order.status == st) or (st == 'delivered' and order.status == 'in_review') %}
+                    <div class="space-y-1.5">
+                        <div class="h-2 rounded-full transition duration-300 {% if is_current %}bg-teal-400 ring-2 ring-teal-400/30{% elif is_passed %}bg-teal-600{% else %}bg-[#262B35]{% endif %}"></div>
+                        <span class="font-bold block text-[11px] {% if is_current %}text-teal-400{% elif is_passed %}text-[#EAECEF]{% else %}text-[#555B66]{% endif %}">
+                            {{ status_labels[st] }}
+                        </span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- NDA Agreement Notification / Signature Box if required -->
+    {% if order.nda_required %}
+        <div class="gigly-card p-6 mb-8 border {% if order.nda_signed %}border-purple-500/40 bg-purple-950/10{% else %}border-amber-500/40 bg-amber-950/10{% endif %}">
+            <div class="flex flex-col sm:flex-row items-start justify-between gap-4">
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-file-signature text-purple-400 text-lg"></i>
+                        <h3 class="text-sm font-bold text-[#EAECEF]">Contrato de Confidencialidad y No Divulgación (NDA) Gigly</h3>
+                        {% if order.nda_signed %}
+                            <span class="bg-purple-500/20 text-purple-300 text-[10px] font-bold px-2 py-0.5 rounded border border-purple-500/30">Firmado Digitalmente</span>
+                        {% else %}
+                            <span class="bg-amber-500/20 text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded border border-amber-500/30">Firma Pendiente</span>
+                        {% endif %}
+                    </div>
+                    <p class="text-xs text-[#B0B5BD]">
+                        {% if order.nda_signed %}
+                            Acuerdo firmado por <strong>{{ order.nda_signature_text }}</strong> el {{ order.nda_signed_at.strftime("%d/%m/%Y %H:%M") }}. Hash de verificación: <code class="text-purple-400 text-[11px]">{{ nda.signature_hash[:20] if nda else 'GIGLY-NDA-VERIFIED' }}...</code>
+                        {% else %}
+                            Las partes deben firmar el acuerdo de confidencialidad para proteger la propiedad intelectual de este proyecto.
+                        {% endif %}
+                    </p>
+                </div>
+
+                <!-- 1-Click Signature Action if not signed -->
+                {% if not order.nda_signed %}
+                    <div class="bg-[#121417] p-3 rounded-lg border border-[#262B35] space-y-2 shrink-0">
+                        <label class="flex items-center gap-2 text-xs text-[#EAECEF] cursor-pointer">
+                            <input type="checkbox" x-model="ndaAgreed" class="accent-purple-500">
+                            <span>Acepto los términos del NDA Gigly</span>
+                        </label>
+                        <button 
+                            type="button" 
+                            @click="signNDA()" 
+                            class="w-full py-1.5 px-4 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded transition shadow-sm"
+                        >
+                            Firmar NDA Digital con 1 Clic
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Main Order Room Grid (Left: Deliverables & Milestones / Right: Live Chat & Video) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left Column: Deliverables Vault, Milestones & Deliver Form (7 cols) -->
+        <div class="lg:col-span-7 space-y-8">
+            
+            <!-- Milestone Tracker Section (if milestone-based) -->
+            {% if milestones %}
+                <div class="gigly-card p-6 space-y-4">
+                    <div class="flex items-center justify-between border-b border-[#262B35] pb-3">
+                        <h3 class="text-sm font-bold text-[#EAECEF] uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-list-ol text-teal-400"></i> Pagos por Hitos (Milestones)
+                        </h3>
+                        <span class="text-xs text-[#B0B5BD]">{{ milestones|length }} fases del proyecto</span>
+                    </div>
+
+                    <div class="space-y-3">
+                        {% for m in milestones %}
+                            <div class="bg-[#121417] p-4 rounded-xl border border-[#262B35] flex items-center justify-between gap-4">
+                                <div class="space-y-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-5 h-5 rounded-full bg-teal-500/20 text-teal-400 text-xs flex items-center justify-center font-bold">{{ m.order_index }}</span>
+                                        <h4 class="text-xs font-bold text-[#EAECEF]">{{ m.title }}</h4>
+                                        <span class="text-[10px] px-2 py-0.2 rounded font-semibold {% if m.status == 'approved' %}bg-emerald-500/20 text-emerald-400{% else %}bg-amber-500/20 text-amber-400{% endif %}">
+                                            {{ m.status|capitalize }}
+                                        </span>
+                                    </div>
+                                    <p class="text-[11px] text-[#B0B5BD]">{{ m.description }}</p>
+                                </div>
+
+                                <div class="text-right shrink-0">
+                                    <span class="text-sm font-extrabold text-teal-400 block">${{ "%.2f"|format(m.amount) }}</span>
+                                    {% if is_buyer and m.status != 'approved' and order.status != 'completed' %}
+                                        <button 
+                                            type="button" 
+                                            @click="approveMilestone({{ m.id }})" 
+                                            class="mt-1 px-3 py-1 bg-teal-500 hover:bg-teal-600 text-black font-bold text-[10px] rounded transition"
+                                        >
+                                            Aprobar Hito
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Deliverables Protected Vault Section -->
+            <div class="gigly-card p-6 space-y-4">
+                <div class="flex items-center justify-between border-b border-[#262B35] pb-3">
+                    <div>
+                        <h3 class="text-sm font-bold text-[#EAECEF] uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-vault text-teal-400"></i> Bóveda de Archivos Entregables
+                        </h3>
+                        <p class="text-[11px] text-[#B0B5BD]">Protección con marca de agua automática hasta la aprobación final</p>
+                    </div>
+                    {% if is_buyer and order.status in ['delivered', 'in_review'] %}
+                        <button 
+                            type="button" 
+                            @click="approveFullOrder()" 
+                            class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-black font-extrabold text-xs rounded-lg transition shadow-md shadow-emerald-500/20 flex items-center gap-1.5"
+                        >
+                            <i class="fa-solid fa-check-double"></i>
+                            <span>Aprobar y Liberar Fondos</span>
+                        </button>
+                    {% endif %}
+                </div>
+
+                {% if deliverables %}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {% for d in deliverables %}
+                            <div class="bg-[#121417] p-3 rounded-xl border border-[#262B35] space-y-3 group hover:border-teal-500/40 transition">
+                                <!-- Preview Image (Watermarked or Original) -->
+                                <div class="relative h-36 rounded-lg overflow-hidden bg-black/60 flex items-center justify-center">
+                                    {% if d.is_image %}
+                                        <img 
+                                            src="/api/orders/{{ order.id }}/deliverables/{{ d.id }}/download?preview=true" 
+                                            alt="{{ d.file_title }}" 
+                                            class="w-full h-full object-cover"
+                                        >
+                                    {% else %}
+                                        <div class="text-center p-4">
+                                            <i class="fa-solid fa-file-zipper text-4xl text-teal-400 mb-1"></i>
+                                            <p class="text-[11px] text-[#B0B5BD] truncate max-w-[180px]">{{ d.file_title }}</p>
+                                        </div>
+                                    {% endif %}
+
+                                    <!-- Watermark status pill -->
+                                    <div class="absolute top-2 left-2">
+                                        {% if order.status == 'completed' %}
+                                            <span class="bg-emerald-500/90 text-black text-[9px] font-bold px-2 py-0.5 rounded shadow">
+                                                ✓ Original Desbloqueado
+                                            </span>
+                                        {% else %}
+                                            <span class="bg-amber-500/90 text-black text-[9px] font-bold px-2 py-0.5 rounded shadow flex items-center gap-1">
+                                                <i class="fa-solid fa-water"></i> Vista Previa Protegida
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h4 class="text-xs font-bold text-[#EAECEF] truncate">{{ d.file_title }}</h4>
+                                    <p class="text-[11px] text-[#B0B5BD] line-clamp-1 mt-0.5">{{ d.notes or 'Sin comentarios adicionales.' }}</p>
+                                </div>
+
+                                <div class="pt-2 border-t border-[#262B35] flex items-center justify-between text-xs">
+                                    <span class="text-[10px] text-[#B0B5BD]">{{ d.created_at.strftime("%d/%m %H:%M") }}</span>
+                                    
+                                    <a 
+                                        href="/api/orders/{{ order.id }}/deliverables/{{ d.id }}/download" 
+                                        class="px-3 py-1 rounded bg-[#1A1D24] hover:bg-teal-500 hover:text-black border border-[#262B35] text-[11px] font-bold text-[#EAECEF] transition flex items-center gap-1"
+                                    >
+                                        <i class="fa-solid fa-download text-[10px]"></i>
+                                        <span>{% if order.status == 'completed' %}Descargar Original{% else %}Ver Vista Previa{% endif %}</span>
+                                    </a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-8 text-xs text-[#B0B5BD] bg-[#121417] rounded-xl border border-[#262B35]">
+                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-teal-400 mb-2"></i>
+                        <p class="font-bold text-[#EAECEF]">Aún no hay archivos entregables en la bóveda</p>
+                        <p class="text-[11px] mt-1">El vendedor cargará el trabajo aquí cuando esté listo.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Seller Work Submission Form (Only for Seller) -->
+            {% if is_seller and order.status in ['in_progress', 'delivered', 'in_review'] %}
+                <div class="gigly-card p-6 space-y-4 border border-teal-500/30">
+                    <h3 class="text-sm font-bold text-teal-400 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-upload"></i> Subir Entrega de Trabajo (Protección Automática)
+                    </h3>
+
+                    <form action="/api/orders/{{ order.id }}/deliver" method="POST" enctype="multipart/form-data" class="space-y-4" id="deliveryForm">
+                        <div>
+                            <label class="block text-xs font-bold text-[#B0B5BD] uppercase mb-1">Título de la Entrega</label>
+                            <input type="text" name="file_title" required placeholder="Ej. Versión Final del Módulo / Prototipo Aprobado" class="w-full bg-[#121417] text-xs text-[#EAECEF] p-2.5 rounded-lg border border-[#262B35] focus:border-teal-400">
+                        </div>
+
+                        {% if milestones %}
+                            <div>
+                                <label class="block text-xs font-bold text-[#B0B5BD] uppercase mb-1">Asociar a Hito (Opcional)</label>
+                                <select name="milestone_id" class="w-full bg-[#121417] text-xs text-[#EAECEF] p-2 rounded-lg border border-[#262B35]">
+                                    <option value="">Entrega global</option>
+                                    {% for m in milestones %}
+                                        <option value="{{ m.id }}">Hito {{ m.order_index }}: {{ m.title }} (${{ m.amount }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        {% endif %}
+
+                        <div>
+                            <label class="block text-xs font-bold text-[#B0B5BD] uppercase mb-1">Notas para el Comprador</label>
+                            <textarea name="notes" rows="2" placeholder="Detalles de lo que incluye esta entrega..." class="w-full bg-[#121417] text-xs text-[#EAECEF] p-2 rounded-lg border border-[#262B35]"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-[#B0B5BD] uppercase mb-1">Archivo Entregable (Imágenes, ZIP, PDF, etc.)</label>
+                            <input type="file" name="delivery_file" required class="w-full bg-[#121417] text-xs text-[#B0B5BD] p-2 rounded-lg border border-[#262B35]">
+                            <p class="text-[10px] text-teal-400 mt-1">✓ Gigly aplicará automáticamente una marca de agua anti-robo a las imágenes antes de que el comprador apruebe.</p>
+                        </div>
+
+                        <button type="submit" class="w-full py-2.5 bg-teal-500 hover:bg-teal-600 text-black font-extrabold text-xs rounded-lg transition shadow-md shadow-teal-500/20">
+                            Enviar Entrega a Bóveda
+                        </button>
+                    </form>
+                </div>
+            {% endif %}
+
+            <!-- Review Section (After completion) -->
+            {% if order.status == 'completed' %}
+                <div class="gigly-card p-6 space-y-4">
+                    <h3 class="text-sm font-bold text-[#EAECEF] uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-star text-amber-400"></i> Calificación y Reseña del Pedido
+                    </h3>
+
+                    {% if existing_review %}
+                        <div class="bg-[#121417] p-4 rounded-xl border border-[#262B35] space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-[#EAECEF]">Reseña de {{ existing_review.buyer.full_name }}</span>
+                                <div class="text-amber-400 text-xs">
+                                    {% for i in range(existing_review.rating) %}★{% endfor %}
+                                </div>
+                            </div>
+                            <p class="text-xs text-[#B0B5BD] italic">"{{ existing_review.comment }}"</p>
+                        </div>
+                    {% elif is_buyer %}
+                        <form action="/api/orders/{{ order.id }}/review" method="POST" class="space-y-3" id="reviewForm">
+                            <div>
+                                <label class="block text-xs font-bold text-[#B0B5BD] mb-1">Puntuación (1 a 5 estrellas)</label>
+                                <select name="rating" class="w-full bg-[#121417] text-xs text-[#EAECEF] p-2 rounded-lg border border-[#262B35]">
+                                    <option value="5">★★★★★ (5 estrellas - Excelente)</option>
+                                    <option value="4">★★★★☆ (4 estrellas - Muy Bueno)</option>
+                                    <option value="3">★★★☆☆ (3 estrellas - Bueno)</option>
+                                    <option value="2">★★☆☆☆ (2 estrellas - Regular)</option>
+                                    <option value="1">★☆☆☆☆ (1 estrella - Insatisfecho)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-[#B0B5BD] mb-1">Tu Comentario</label>
+                                <textarea name="comment" rows="3" required placeholder="Describe tu experiencia de trabajo con este profesional..." class="w-full bg-[#121417] text-xs text-[#EAECEF] p-2 rounded-lg border border-[#262B35]"></textarea>
+                            </div>
+                            <button type="submit" class="px-5 py-2 bg-teal-500 hover:bg-teal-600 text-black font-bold text-xs rounded-lg transition">
+                                Publicar Reseña Verificada
+                            </button>
+                        </form>
+                    {% else %}
+                        <p class="text-xs text-[#B0B5BD]">Esperando que el comprador deje su valoración final.</p>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+        </div>
+
+        <!-- Right Column: Real-Time Chat & Jitsi Video Calls (5 cols) -->
+        <div class="lg:col-span-5">
+            <div class="gigly-card border border-[#262B35] flex flex-col h-[700px] sticky top-24">
+                
+                <!-- Chat Header -->
+                <div class="p-4 border-b border-[#262B35] flex items-center justify-between bg-[#1A1D24]">
+                    <div class="flex items-center gap-2.5">
+                        <div class="relative">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 absolute bottom-0 right-0 border-2 border-[#1A1D24]"></span>
+                            <i class="fa-solid fa-comments text-teal-400 text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xs font-bold text-[#EAECEF]">Sala de Chat del Pedido</h3>
+                            <p class="text-[10px] text-[#B0B5BD]">Mensajería en tiempo real</p>
+                        </div>
+                    </div>
+
+                    <!-- Instant Jitsi Video Call Button -->
+                    <button 
+                        type="button" 
+                        @click="startVideoCall()" 
+                        class="px-3 py-1.5 bg-teal-500/10 hover:bg-teal-500 hover:text-black text-teal-400 border border-teal-500/30 font-bold text-xs rounded-lg transition flex items-center gap-1.5 shadow-sm"
+                        title="Iniciar videollamada instantánea con Jitsi Meet"
+                    >
+                        <i class="fa-solid fa-video text-xs"></i>
+                        <span>Videollamada</span>
+                    </button>
+                </div>
+
+                <!-- Chat Messages Scroll Container -->
+                <div class="flex-grow p-4 overflow-y-auto space-y-3" id="chatContainer">
+                    {% for msg in messages %}
+                        {% if msg.is_system_message %}
+                            <div class="text-center my-2">
+                                <div class="inline-block bg-[#121417] border border-[#262B35] text-[11px] text-teal-300 px-3 py-1.5 rounded-full max-w-sm">
+                                    {{ msg.content }}
+                                    {% if msg.jitsi_meeting_url %}
+                                        <div class="mt-1">
+                                            <a href="{{ msg.jitsi_meeting_url }}" target="_blank" class="font-bold underline text-amber-400">
+                                                Unirse a Videollamada Jitsi &rarr;
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% else %}
+                            {% set is_me = (msg.sender_id == user.id) %}
+                            <div class="flex items-end gap-2 {% if is_me %}justify-end{% else %}justify-start{% endif %}">
+                                {% if not is_me %}
+                                    <img src="{{ msg.sender.avatar_url if msg.sender else 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150' }}" alt="Avatar" class="w-6 h-6 rounded-full object-cover shrink-0">
+                                {% endif %}
+                                <div class="max-w-[75%] rounded-2xl p-3 text-xs {% if is_me %}bg-teal-600 text-white rounded-br-none{% else %}bg-[#121417] text-[#EAECEF] border border-[#262B35] rounded-bl-none{% endif %}">
+                                    <p class="leading-relaxed">{{ msg.content }}</p>
+                                    <span class="text-[9px] block text-right mt-1 opacity-70">{{ msg.created_at.strftime("%H:%M") }}</span>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <!-- Chat Input Form -->
+                <div class="p-3 border-t border-[#262B35] bg-[#121417]">
+                    <form id="chatForm" class="flex items-center gap-2" onsubmit="sendChatMessage(event)">
+                        <input 
+                            type="text" 
+                            id="messageInput" 
+                            placeholder="Escribe un mensaje al colaborador..." 
+                            required 
+                            autocomplete="off"
+                            class="flex-grow bg-[#1A1D24] text-xs text-[#EAECEF] placeholder-[#555B66] px-3.5 py-2.5 rounded-xl border border-[#262B35] focus:outline-none focus:border-teal-400"
+                        >
+                        <button 
+                            type="submit" 
+                            class="w-9 h-9 rounded-xl bg-teal-500 hover:bg-teal-600 text-black flex items-center justify-center transition shrink-0"
+                        >
+                            <i class="fa-solid fa-paper-plane text-xs"></i>
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Jitsi Video Call Modal Embeber -->
+    <div x-show="showJitsiModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" style="display: none;">
+        <div class="gigly-card w-full max-w-4xl h-[600px] flex flex-col overflow-hidden border border-teal-500/40">
+            <div class="p-4 bg-[#1A1D24] border-b border-[#262B35] flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-video text-teal-400"></i>
+                    <h3 class="text-sm font-bold text-[#EAECEF]">Videollamada Segura Jitsi Meet • Pedido #{{ order.order_number }}</h3>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a :href="jitsiUrl" target="_blank" class="px-2.5 py-1 rounded bg-[#121417] text-teal-400 text-xs font-bold border border-[#262B35]">
+                        Abrir en ventana &rarr;
+                    </a>
+                    <button @click="showJitsiModal = false" class="text-[#B0B5BD] hover:text-white px-2">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="flex-grow bg-black">
+                <iframe 
+                    :src="jitsiUrl" 
+                    allow="camera; microphone; fullscreen; display-capture" 
+                    class="w-full h-full border-0"
+                ></iframe>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Real-Time WebSocket Chat Logic
+    const orderId = {{ order.id }};
+    const currentUserId = {{ user.id }};
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws/orders/${orderId}`;
+    let socket;
+
+    function initWebSocket() {
+        try {
+            socket = new WebSocket(wsUrl);
+            socket.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                appendMessage(data);
+            };
+            socket.onclose = function() {
+                // Reconnect after 3s if disconnected
+                setTimeout(initWebSocket, 3000);
+            };
+        } catch(e) {
+            console.error('WS Error:', e);
+        }
+    }
+    initWebSocket();
+
+    function appendMessage(data) {
+        const container = document.getElementById('chatContainer');
+        const isMe = (data.sender_id === currentUserId);
+        
+        let msgHtml = '';
+        if (data.is_system_message) {
+            msgHtml = `
+                <div class="text-center my-2">
+                    <div class="inline-block bg-[#121417] border border-[#262B35] text-[11px] text-teal-300 px-3 py-1.5 rounded-full max-w-sm">
+                        ${data.content}
+                        ${data.jitsi_meeting_url ? `<div class="mt-1"><a href="${data.jitsi_meeting_url}" target="_blank" class="font-bold underline text-amber-400">Unirse a Videollamada &rarr;</a></div>` : ''}
+                    </div>
+                </div>
+            `;
+        } else {
+            msgHtml = `
+                <div class="flex items-end gap-2 ${isMe ? 'justify-end' : 'justify-start'}">
+                    ${!isMe ? `<img src="${data.sender_avatar}" alt="Avatar" class="w-6 h-6 rounded-full object-cover shrink-0">` : ''}
+                    <div class="max-w-[75%] rounded-2xl p-3 text-xs ${isMe ? 'bg-teal-600 text-white rounded-br-none' : 'bg-[#121417] text-[#EAECEF] border border-[#262B35] rounded-bl-none'}">
+                        <p class="leading-relaxed">${data.content}</p>
+                        <span class="text-[9px] block text-right mt-1 opacity-70">${data.created_at}</span>
+                    </div>
+                </div>
+            `;
+        }
+        container.insertAdjacentHTML('beforeend', msgHtml);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function sendChatMessage(event) {
+        event.preventDefault();
+        const input = document.getElementById('messageInput');
+        const content = input.value.trim();
+        if (!content) return;
+
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ content: content }));
+            input.value = '';
+        } else {
+            // HTTP fallback
+            const formData = new FormData();
+            formData.append('content', content);
+            fetch(`/api/orders/${orderId}/messages`, {
+                method: 'POST',
+                body: formData
+            }).then(() => {
+                input.value = '';
+            });
+        }
+    }
+
+    // Scroll chat to bottom on load
+    const c = document.getElementById('chatContainer');
+    if (c) c.scrollTop = c.scrollHeight;
+</script>
+{% endblock %}

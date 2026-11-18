@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Gigly • Marketplace Freelance de Próxima Generación{% endblock %}</title>
+    
+    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS with custom configuration -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gigly: {
+                            dark: '#121417',
+                            card: '#1A1D24',
+                            cardHover: '#232731',
+                            border: '#262B35',
+                            text: '#EAECEF',
+                            muted: '#B0B5BD',
+                            accent: '#14B8A6',
+                            accentHover: '#0D9488'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Chart.js for Financial Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/custom.css">
+    
+    {% block head %}{% endblock %}
+</head>
+<body class="bg-[#121417] text-[#EAECEF] min-h-screen flex flex-col antialiased selection:bg-teal-500 selection:text-white" x-data="{ mobileMenuOpen: false }">
+
+    <!-- Top Notice Banner for Escrow & Security -->
+    <div class="bg-gradient-to-r from-teal-950 via-[#1A1D24] to-teal-950 border-b border-teal-500/20 py-1.5 px-4 text-xs text-center text-teal-300 font-medium">
+        <span class="inline-flex items-center gap-1.5">
+            <i class="fa-solid fa-shield-halved text-teal-400"></i>
+            <strong>Gigly Escrow Activo:</strong> Tu dinero está protegido en custodia hasta que apruebes la entrega con marca de agua.
+        </span>
+    </div>
+
+    <!-- Main Navigation Bar -->
+    <header class="sticky top-0 z-40 bg-[#121417]/90 backdrop-blur-md border-b border-[#262B35]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between py-3">
+            
+            <!-- Left: Logo & Search -->
+            <div class="flex items-center gap-6">
+                <!-- Textual Brand Logo -->
+                <a href="/" class="flex items-center gap-1 text-2xl font-extrabold tracking-tight text-[#EAECEF] hover:opacity-90 transition">
+                    <span>Gig</span><span class="text-teal-400">ly</span>
+                    <span class="w-2 h-2 rounded-full bg-teal-400 ml-0.5 animate-pulse"></span>
+                </a>
+
+                <!-- Search Bar -->
+                <form action="/gigs" method="GET" class="hidden md:flex items-center relative w-72 lg:w-96">
+                    <input 
+                        type="text" 
+                        name="q" 
+                        placeholder="Buscar servicios (ej. Python, Logo, SEO)..." 
+                        class="w-full bg-[#1A1D24] text-sm text-[#EAECEF] placeholder-[#B0B5BD] pl-10 pr-4 py-2 rounded-full border border-[#262B35] focus:outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-400 transition"
+                    >
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 text-[#B0B5BD] text-xs"></i>
+                </form>
+            </div>
+
+            <!-- Center Navigation Links -->
+            <nav class="hidden lg:flex items-center gap-6 text-sm font-medium text-[#B0B5BD]">
+                <a href="/gigs" class="hover:text-teal-400 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-compass text-xs text-teal-400"></i> Explorar Gigs
+                </a>
+                <a href="/requests" class="hover:text-teal-400 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-gavel text-xs text-amber-400"></i> Subasta de Proyectos
+                </a>
+            </nav>
+
+            <!-- Right: User Actions / Auth -->
+            <div class="flex items-center gap-4">
+                {% if user %}
+                    <!-- Role Switcher (Buyer <-> Seller) -->
+                    <div class="flex items-center bg-[#1A1D24] p-1 rounded-full border border-[#262B35] text-xs font-semibold">
+                        <button 
+                            type="button"
+                            onclick="Gigly.switchRole('buyer')"
+                            class="px-3 py-1 rounded-full transition flex items-center gap-1 {% if user.current_mode == 'buyer' %}bg-teal-500 text-black font-bold shadow-sm{% else %}text-[#B0B5BD] hover:text-[#EAECEF]{% endif %}"
+                        >
+                            <i class="fa-solid fa-cart-shopping text-[10px]"></i> Comprador
+                        </button>
+                        <button 
+                            type="button"
+                            onclick="Gigly.switchRole('seller')"
+                            class="px-3 py-1 rounded-full transition flex items-center gap-1 {% if user.current_mode == 'seller' %}bg-teal-500 text-black font-bold shadow-sm{% else %}text-[#B0B5BD] hover:text-[#EAECEF]{% endif %}"
+                        >
+                            <i class="fa-solid fa-briefcase text-[10px]"></i> Vendedor
+                        </button>
+                    </div>
+
+                    <!-- Wallet Balance Pill -->
+                    <a href="/wallet" class="hidden sm:flex items-center gap-1.5 bg-[#1A1D24] hover:bg-[#232731] border border-[#262B35] px-3 py-1.5 rounded-lg text-xs font-medium text-teal-300 transition">
+                        <i class="fa-solid fa-wallet text-teal-400"></i>
+                        <span>${{ "%.2f"|format(user.wallet_balance) }}</span>
+                    </a>
+
+                    <!-- Orders Link -->
+                    <a href="/orders" class="text-sm font-medium text-[#B0B5BD] hover:text-teal-400 transition hidden sm:inline-flex items-center gap-1">
+                        <i class="fa-solid fa-boxes-stacked text-xs"></i> Pedidos
+                    </a>
+
+                    <!-- User Dropdown Menu (Alpine) -->
+                    <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+                        <button @click="open = !open" class="flex items-center gap-2 focus:outline-none">
+                            <img src="{{ user.avatar_url }}" alt="{{ user.full_name }}" class="w-8 h-8 rounded-full object-cover border border-teal-500/50">
+                            <i class="fa-solid fa-chevron-down text-xs text-[#B0B5BD] transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
+                        </button>
+
+                        <div 
+                            x-show="open" 
+                            x-transition 
+                            class="absolute right-0 mt-2 w-56 bg-[#1A1D24] border border-[#262B35] rounded-xl shadow-2xl py-2 z-50 text-sm"
+                            style="display: none;"
+                        >
+                            <div class="px-4 py-2 border-b border-[#262B35]">
+                                <p class="font-bold text-[#EAECEF] truncate">{{ user.full_name }}</p>
+                                <p class="text-xs text-[#B0B5BD] truncate">@{{ user.username }} • <span class="capitalize text-teal-400">{{ user.current_mode }}</span></p>
+                            </div>
+
+                            {% if user.is_admin %}
+                                <a href="/admin" class="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-400 hover:bg-red-500/20 font-bold transition">
+                                    <i class="fa-solid fa-shield-halved text-xs"></i> Panel Admin (SuperAdmin)
+                                </a>
+                            {% endif %}
+
+                            {% if user.current_mode == 'seller' %}
+                                <a href="/gigs/new" class="flex items-center gap-2 px-4 py-2 text-[#EAECEF] hover:bg-[#232731] hover:text-teal-400 transition">
+                                    <i class="fa-solid fa-plus-circle text-teal-400 text-xs"></i> Publicar Servicio (Gig)
+                                </a>
+                                <a href="/analytics" class="flex items-center gap-2 px-4 py-2 text-[#EAECEF] hover:bg-[#232731] hover:text-teal-400 transition">
+                                    <i class="fa-solid fa-chart-line text-emerald-400 text-xs"></i> Analíticas Financieras
+                                </a>
+                            {% else %}
+                                <a href="/requests/new" class="flex items-center gap-2 px-4 py-2 text-[#EAECEF] hover:bg-[#232731] hover:text-teal-400 transition">
+                                    <i class="fa-solid fa-bullhorn text-teal-400 text-xs"></i> Publicar Solicitud de Proyecto
+                                </a>
+                            {% endif %}
+
+                            <a href="/orders" class="flex items-center gap-2 px-4 py-2 text-[#EAECEF] hover:bg-[#232731] hover:text-teal-400 transition">
+                                <i class="fa-solid fa-receipt text-xs text-sky-400"></i> Mis Pedidos
+                            </a>
+                            <a href="/wallet" class="flex items-center gap-2 px-4 py-2 text-[#EAECEF] hover:bg-[#232731] hover:text-teal-400 transition">
+                                <i class="fa-solid fa-credit-card text-xs text-amber-400"></i> Billetera & Gigly Escrow
+                            </a>
+
+                            <div class="border-t border-[#262B35] my-1"></div>
+
+                            <a href="/logout" class="flex items-center gap-2 px-4 py-2 text-red-400 hover:bg-[#232731] transition">
+                                <i class="fa-solid fa-right-from-bracket text-xs"></i> Cerrar Sesión
+                            </a>
+                        </div>
+                    </div>
+
+                {% else %}
+                    <!-- Auth Buttons -->
+                    <a href="/login" class="text-sm font-semibold text-[#EAECEF] hover:text-teal-400 transition px-3 py-1.5">
+                        Iniciar Sesión
+                    </a>
+                    <a href="/register" class="text-sm font-bold bg-teal-500 hover:bg-teal-600 text-black px-4 py-2 rounded-lg shadow-sm transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-user-plus text-xs"></i> Unirse a Gigly
+                    </a>
+                {% endif %}
+
+                <!-- Mobile Menu Button -->
+                <button @click="mobileMenuOpen = !mobileMenuOpen" class="lg:hidden text-[#B0B5BD] hover:text-[#EAECEF]">
+                    <i class="fa-solid fa-bars text-lg"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Dropdown -->
+        <div x-show="mobileMenuOpen" class="lg:hidden bg-[#1A1D24] border-b border-[#262B35] px-4 py-4 space-y-3" style="display: none;">
+            <a href="/gigs" class="block text-sm font-medium text-[#EAECEF]">Explorar Gigs</a>
+            <a href="/requests" class="block text-sm font-medium text-[#EAECEF]">Subasta de Proyectos</a>
+            {% if user %}
+                <a href="/orders" class="block text-sm font-medium text-[#EAECEF]">Mis Pedidos</a>
+                <a href="/wallet" class="block text-sm font-medium text-[#EAECEF]">Billetera (${{ "%.2f"|format(user.wallet_balance) }})</a>
+                {% if user.current_mode == 'seller' %}
+                    <a href="/gigs/new" class="block text-sm font-medium text-teal-400">+ Publicar Gig</a>
+                    <a href="/analytics" class="block text-sm font-medium text-teal-400">Analíticas Financieras</a>
+                {% else %}
+                    <a href="/requests/new" class="block text-sm font-medium text-teal-400">+ Publicar Solicitud</a>
+                {% endif %}
+                <a href="/logout" class="block text-sm font-medium text-red-400">Cerrar Sesión</a>
+            {% else %}
+                <a href="/login" class="block text-sm font-medium text-teal-400">Iniciar Sesión</a>
+                <a href="/register" class="block text-sm font-medium text-teal-400">Crear Cuenta</a>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- Main Content Injection -->
+    <main class="flex-grow">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Gigly Footer -->
+    <footer class="bg-[#121417] border-t border-[#262B35] mt-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                
+                <!-- Col 1: Brand & Escrow Promise -->
+                <div class="space-y-4">
+                    <div class="flex items-center gap-1 text-2xl font-black text-[#EAECEF]">
+                        <span>Gig</span><span class="text-teal-400">ly</span>
+                        <span class="w-2 h-2 rounded-full bg-teal-400 ml-0.5"></span>
+                    </div>
+                    <p class="text-xs text-[#B0B5BD] leading-relaxed">
+                        El marketplace freelance de nueva generación. Protegemos cada proyecto con <strong>Gigly Escrow</strong>, pagos por hitos, marcas de agua automáticas anti-robo y comisiones justas del 10%.
+                    </p>
+                    <div class="flex items-center gap-3 text-teal-400 text-sm">
+                        <span class="inline-flex items-center gap-1 bg-[#1A1D24] px-2.5 py-1 rounded border border-teal-500/30 text-xs">
+                            <i class="fa-solid fa-lock text-[10px]"></i> Custodia 100% Segura
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Col 2: Categorías -->
+                <div>
+                    <h4 class="text-sm font-bold text-[#EAECEF] uppercase tracking-wider mb-3">Categorías Populares</h4>
+                    <ul class="space-y-2 text-xs text-[#B0B5BD]">
+                        <li><a href="/gigs?category=Programación+%26+Tech" class="hover:text-teal-400 transition">Programación & Tech</a></li>
+                        <li><a href="/gigs?category=Diseño+%26+Creatividad" class="hover:text-teal-400 transition">Diseño & Creatividad</a></li>
+                        <li><a href="/gigs?category=Marketing+Digital" class="hover:text-teal-400 transition">Marketing Digital</a></li>
+                        <li><a href="/gigs?category=Redacción+%26+Traducción" class="hover:text-teal-400 transition">Redacción & Traducción</a></li>
+                        <li><a href="/gigs?category=Video+%26+Animación" class="hover:text-teal-400 transition">Video & Animación</a></li>
+                    </ul>
+                </div>
+
+                <!-- Col 3: Ventajas Gigly -->
+                <div>
+                    <h4 class="text-sm font-bold text-[#EAECEF] uppercase tracking-wider mb-3">Ventajas Gigly</h4>
+                    <ul class="space-y-2 text-xs text-[#B0B5BD]">
+                        <li><span class="text-teal-400">✓</span> Pagos por Hitos (Milestones)</li>
+                        <li><span class="text-teal-400">✓</span> Bóveda con Marca de Agua</li>
+                        <li><span class="text-teal-400">✓</span> Contratos NDA con un Clic</li>
+                        <li><span class="text-teal-400">✓</span> Subasta de Solicitudes Inversas</li>
+                        <li><span class="text-teal-400">✓</span> Videollamadas Jitsi Integradas</li>
+                    </ul>
+                </div>
+
+                <!-- Col 4: Confianza y Despliegue -->
+                <div>
+                    <h4 class="text-sm font-bold text-[#EAECEF] uppercase tracking-wider mb-3">Plataforma & Soporte</h4>
+                    <p class="text-xs text-[#B0B5BD] leading-relaxed mb-3">
+                        Arquitectura de alto rendimiento construida con Python, FastAPI, SQLAlchemy y Tailwind CSS. Lista para Render y PostgreSQL.
+                    </p>
+                    <div class="text-xs text-teal-400 font-semibold flex items-center gap-1.5">
+                        <i class="fa-solid fa-bolt"></i> Comisión reducida del 10%
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="border-t border-[#262B35] mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-[#B0B5BD] gap-4">
+                <p>&copy; 2026 Gigly Marketplace Inc. Todos los derechos reservados.</p>
+                <div class="flex items-center gap-4">
+                    <span class="hover:text-teal-400 cursor-pointer">Términos de Servicio</span>
+                    <span class="hover:text-teal-400 cursor-pointer">Privacidad & NDA</span>
+                    <span class="hover:text-teal-400 cursor-pointer">Garantía Escrow</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Global Scripts -->
+    <script src="/static/js/main.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

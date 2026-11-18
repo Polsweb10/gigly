@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Pedidos • Gigly{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+            <div class="flex items-center gap-2 text-xs text-[#B0B5BD] mb-1">
+                <a href="/" class="hover:text-teal-400">Inicio</a>
+                <span>/</span>
+                <span class="text-[#EAECEF]">Panel de Pedidos</span>
+            </div>
+            <h1 class="text-3xl font-extrabold text-[#EAECEF]">
+                {% if is_seller %}Pedidos Recibidos como Freelancer{% else %}Mis Pedidos como Comprador{% endif %}
+            </h1>
+            <p class="text-xs text-[#B0B5BD] mt-1">Administra tus contratos activos y el estado de custodia Gigly Escrow</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <a href="/wallet" class="px-4 py-2 rounded-lg bg-[#1A1D24] border border-[#262B35] text-xs font-bold text-teal-400 hover:border-teal-400 transition flex items-center gap-2">
+                <i class="fa-solid fa-wallet"></i> Ver Billetera Escrow
+            </a>
+        </div>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <div class="flex items-center gap-2 border-b border-[#262B35] mb-6 text-xs font-bold">
+        <a 
+            href="/orders?tab=active" 
+            class="pb-3 px-3 transition border-b-2 flex items-center gap-1.5 {% if current_tab == 'active' %}border-teal-400 text-teal-400{% else %}border-transparent text-[#B0B5BD] hover:text-[#EAECEF]{% endif %}"
+        >
+            <i class="fa-solid fa-spinner text-[10px]"></i>
+            <span>En Curso / Activos</span>
+        </a>
+        <a 
+            href="/orders?tab=completed" 
+            class="pb-3 px-3 transition border-b-2 flex items-center gap-1.5 {% if current_tab == 'completed' %}border-teal-400 text-teal-400{% else %}border-transparent text-[#B0B5BD] hover:text-[#EAECEF]{% endif %}"
+        >
+            <i class="fa-solid fa-circle-check text-[10px]"></i>
+            <span>Completados</span>
+        </a>
+        <a 
+            href="/orders?tab=disputed" 
+            class="pb-3 px-3 transition border-b-2 flex items-center gap-1.5 {% if current_tab == 'disputed' %}border-teal-400 text-teal-400{% else %}border-transparent text-[#B0B5BD] hover:text-[#EAECEF]{% endif %}"
+        >
+            <i class="fa-solid fa-triangle-exclamation text-[10px]"></i>
+            <span>En Disputa</span>
+        </a>
+    </div>
+
+    <!-- Orders List -->
+    {% if orders %}
+        <div class="space-y-4">
+            {% for o in orders %}
+                <div class="gigly-card p-5 border border-[#262B35] hover:border-teal-500/40 transition flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    
+                    <div class="space-y-1.5 max-w-xl">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-mono font-bold text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded border border-teal-500/20">
+                                #{{ o.order_number }}
+                            </span>
+                            
+                            {% if o.status == 'completed' %}
+                                <span class="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded">Completado</span>
+                            {% elif o.status in ['delivered', 'in_review'] %}
+                                <span class="bg-amber-500/20 text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded">Entregado (En Revisión)</span>
+                            {% elif o.status == 'in_progress' %}
+                                <span class="bg-blue-500/20 text-blue-400 text-[10px] font-bold px-2 py-0.5 rounded">En Progreso</span>
+                            {% else %}
+                                <span class="bg-gray-800 text-gray-300 text-[10px] font-bold px-2 py-0.5 rounded">{{ o.status|capitalize }}</span>
+                            {% endif %}
+
+                            {% if o.is_milestone_based %}
+                                <span class="badge-milestone text-[10px] font-bold px-1.5 py-0.2 rounded">Hitos</span>
+                            {% endif %}
+
+                            {% if o.nda_required %}
+                                <span class="badge-nda text-[10px] font-bold px-1.5 py-0.2 rounded">NDA</span>
+                            {% endif %}
+                        </div>
+
+                        <h3 class="text-sm font-bold text-[#EAECEF] hover:text-teal-400 transition">
+                            <a href="/orders/{{ o.order_number }}">{{ o.title }}</a>
+                        </h3>
+
+                        <div class="text-xs text-[#B0B5BD] flex items-center gap-4">
+                            <span>
+                                {% if is_seller %}
+                                    Comprador: <strong class="text-[#EAECEF]">{{ o.buyer.full_name }}</strong>
+                                {% else %}
+                                    Freelancer: <strong class="text-[#EAECEF]">{{ o.seller.full_name }}</strong>
+                                {% endif %}
+                            </span>
+                            <span>{{ o.created_at.strftime("%d/%m/%Y") }}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-6 justify-between md:justify-end border-t md:border-t-0 border-[#262B35] pt-3 md:pt-0">
+                        <div class="text-right">
+                            <span class="text-[10px] text-[#B0B5BD] block uppercase">
+                                {% if is_seller %}Pago Neto{% else %}En Custodia{% endif %}
+                            </span>
+                            <span class="text-base font-black text-teal-400">
+                                ${{ "%.2f"|format(o.seller_net_amount if is_seller else o.total_buyer_paid) }}
+                            </span>
+                        </div>
+
+                        <a 
+                            href="/orders/{{ o.order_number }}" 
+                            class="px-4 py-2 bg-teal-500 hover:bg-teal-600 text-black text-xs font-bold rounded-lg transition shadow-sm flex items-center gap-1.5"
+                        >
+                            <span>Abrir Sala</span>
+                            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </a>
+                    </div>
+
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="gigly-card p-12 text-center">
+            <i class="fa-solid fa-box-open text-4xl text-[#B0B5BD] mb-3"></i>
+            <h3 class="text-sm font-bold text-[#EAECEF]">No hay pedidos en esta sección</h3>
+            <p class="text-xs text-[#B0B5BD] mt-1">Explora servicios disponibles o publica un proyecto en la subasta.</p>
+            <div class="mt-4 flex justify-center gap-3">
+                <a href="/gigs" class="px-4 py-2 bg-teal-500 text-black font-bold text-xs rounded-lg transition">Explorar Gigs</a>
+                <a href="/requests" class="px-4 py-2 bg-[#1A1D24] text-[#EAECEF] border border-[#262B35] font-bold text-xs rounded-lg transition">Ver Subastas</a>
+            </div>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}
