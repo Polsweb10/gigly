@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+Allow: /gigs
+Allow: /gigs/
+Allow: /requests
+Allow: /requests/
+
+Disallow: /admin
+Disallow: /wallet
+Disallow: /orders
+Disallow: /analytics
+Disallow: /api/
+Disallow: /static/
+Disallow: /uploads/deliveries/
+Disallow: /login
+Disallow: /register
+Disallow: /logout
+
+Sitemap: https://gigly-fjkt.onrender.com/sitemap.xml

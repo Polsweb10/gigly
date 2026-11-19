@@ -4,7 +4,65 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Gigly • Marketplace Freelance de Próxima Generación{% endblock %}</title>
-    
+
+    <!-- ═══ SEO: Meta Tags Básicos ═══ -->
+    <meta name="description" content="{% block meta_description %}Gigly es el marketplace freelance de nueva generación. Contrata talento global con seguridad Escrow, pagos por hitos, contratos NDA y comisiones del 10%.{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}marketplace freelance, contratar freelancers, servicios profesionales, escrow pagos, gigs, diseño web, programación, marketing digital, Gigly{% endblock %}">
+    <meta name="author" content="Gigly Marketplace">
+    <meta name="robots" content="{% block meta_robots %}index, follow{% endblock %}">
+    <link rel="canonical" href="{% block canonical %}https://gigly-fjkt.onrender.com{% endblock %}">
+
+    <!-- ═══ Google Search Console Verification ═══ -->
+    <meta name="google-site-verification" content="google144efc7099ba3d48">
+
+    <!-- ═══ Open Graph (Facebook, WhatsApp, LinkedIn) ═══ -->
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:site_name" content="Gigly">
+    <meta property="og:title" content="{% block og_title %}Gigly • Marketplace Freelance de Próxima Generación{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Contrata freelancers con protección Escrow, pagos por hitos y comisiones del 10%. El marketplace más justo para compradores y vendedores.{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}https://gigly-fjkt.onrender.com/static/img/gigly-og.png{% endblock %}">
+    <meta property="og:url" content="{% block og_url %}https://gigly-fjkt.onrender.com{% endblock %}">
+    <meta property="og:locale" content="es_ES">
+
+    <!-- ═══ Twitter / X Cards ═══ -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@GiglyApp">
+    <meta name="twitter:title" content="{% block twitter_title %}Gigly • Marketplace Freelance{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Contrata talento global con seguridad Escrow y comisiones del 10%. El marketplace freelance más justo.{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}https://gigly-fjkt.onrender.com/static/img/gigly-og.png{% endblock %}">
+
+    <!-- ═══ Schema.org Structured Data (JSON-LD) ═══ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Gigly",
+      "url": "https://gigly-fjkt.onrender.com",
+      "description": "Marketplace freelance de nueva generación con protección Escrow, pagos por hitos y comisiones del 10%.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://gigly-fjkt.onrender.com/gigs?q={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Gigly Marketplace",
+        "url": "https://gigly-fjkt.onrender.com",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://gigly-fjkt.onrender.com/static/img/gigly-og.png"
+        }
+      }
+    }
+    </script>
+    {% block structured_data %}{% endblock %}
+
+    <!-- ═══ Favicon ═══ -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔵</text></svg>">
+
     <!-- Google Fonts: Plus Jakarta Sans & Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
